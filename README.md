@@ -4,6 +4,6 @@
 ## Requirements
 Python 3.11.12  
 Tensorflow 2.15  
-Sionna 1.1.0  
+Sionna 1.0.2
 Cuda 12.2   
 (Compatibility depends on GPU => see: https://www.tensorflow.org/install/source )  
