@@ -93,6 +93,7 @@ if __name__ == "__main__":
     setup()
 
     # TODO load params from config file
+    intermediate_reders = True # slows down the program a lot => only for debugging!!!
 
     # load scene# Load scene
     scene = load_scene(r"/home/user/6GTandem_RT_server/6G_Tandem_kantoorruimte_v10/office_space.xml") 
@@ -102,15 +103,12 @@ if __name__ == "__main__":
     my_cam = Camera(position=[9,35,0.5], look_at=[0,0,3])
 
     # Render scene with new camera*
-    scene.render_to_file(camera=my_cam, filename='empty_scene.png', resolution=[650, 500], num_samples=512) # Increase num_samples to increase image quality
+    if intermediate_reders:
+        scene.render_to_file(camera=my_cam, filename='empty_scene.png', resolution=[650, 500], num_samples=512, clip_at=20) # Increase num_samples to increase image quality
 
     # set materials for the scene
     set_materials(scene)
 
-
-    # todo compute or load all UE posotions
-    ue_pos = [7, 10, 1]
-    
     # todo change because this is in y-z plane
     N_antennas = 4 # Number of antennas in each direction (x and y)
     scene.tx_array = PlanarArray(num_rows=N_antennas,
@@ -128,10 +126,128 @@ if __name__ == "__main__":
                                 pattern="iso",
                                 polarization="cross")
 
+    # todo compute or load all UE posotions
+    ue_pos = [7, 10, 1]
+    ue_positions = [ue_pos]
+
+    # todo: sub-THz stripe specs => load from yamls config file
+    stripe_start_pos = [2, 2.5, 3.5]
+    N_RUs = 5 #40 # todo adjust to size of the room (along y axis)
+    N_stripes = 2 #10 # todo adjust to size of the room (alang x axis)
+    space_between_RUs = 0.5 # in meters
+    space_between_stripses = 0.5 # in meters
+
+    # todo load from yaml file OFDM system parameters
+    BW = 12.5e9 # Bandwidth of the system
+    num_subcarriers = 2**15 #=32768
+    subcarrier_spacing= BW / num_subcarriers
+    f_axis = scene.frequency - BW/2 + subcarrier_spacing * np.arange(num_subcarriers)  # array of frequencies 
+    frequencies = subcarrier_frequencies(num_subcarriers, subcarrier_spacing) # Compute baseband frequencies of subcarriers relative to the carrier frequency
+    print(f'subcarrier spacing = {subcarrier_spacing/1e6} MHz')
+
+    # set scene frequency
+    scene.frequency = 157.75e9 # Set frequency to fc 
+
+    # Instantiate a path solver
+    # The same path solver can be used with multiple scenes
+    p_solver  = PathSolver()
+
+    
+
+    for ue_idx, ue_xyz in enumerate(ue_positions):
+        # Create a receiver
+        rx = Receiver(name=f"rx_{ue_idx}",
+                    position=ue_pos,
+                    display_radius=0.5)
+
+        # Add receiver instance to scene
+        scene.add(rx)
+
+        # loop over all stripes
+        for stripe_idx in range(N_stripes):
+            # loop over all RUs in the stripe
+            for RU_idx in range(N_RUs):
+                print(f'Processing UE {ue_idx} stripe {stripe_idx} RU {RU_idx}...')
+            
+                # compute RU position
+                tx_pos = [stripe_start_pos[0] + stripe_idx * space_between_stripses,
+                        stripe_start_pos[1] + RU_idx * space_between_RUs,
+                        stripe_start_pos[2]]
+                
+                # Create RU transmitter instance
+                tx = Transmitter(name=f"tx_stripe_{stripe_idx}_RU_{RU_idx}",
+                            position=tx_pos,
+                            display_radius=0.1)
+
+                # Add RU transmitter instance to scene
+                scene.add(tx)
+
+                # Point the transmitter downwards
+                tx.look_at([tx_pos[0], tx_pos[1], 0]) # Transmitter points downwards
+
+                # render scene with tx and rx
+                if intermediate_reders:
+                    print(f' rendering scene prior to path solver')
+                    scene.render_to_file(camera=my_cam, filename=f'scene_with_stripe_{stripe_idx}_RU_{RU_idx}.png', 
+                                        resolution=[650, 500], num_samples=512, clip_at=20) 
+
+
+                # Compute propagation paths
+                t1 = time.time()
+                paths = p_solver(scene=scene,
+                                max_depth=5,
+                                los=True,
+                                specular_reflection=True,
+                                diffuse_reflection=False,
+                                refraction=True,
+                                synthetic_array=False,
+                                seed=41)
+
+
+
+                # Compute channel frequency response
+                h_freq = paths.cfr(frequencies=frequencies,
+                                normalize=True, # Normalize energy
+                                normalize_delays=True,
+                                out_type="numpy")
+
+                t2 = time.time()
+                print(f"Time to compute paths and CFR: {t2-t1:.2f} seconds")
+                # Shape: [num_rx, num_rx_ant, num_tx, num_tx_ant, num_time_steps, num_subcarriers]
+                print("Shape of h_freq: ", h_freq.shape)
+
+                # todo store values of CFR
+
+                # render scene with tx and rx
+                if intermediate_reders:
+                    print(f' rendering scene with paths')
+                    scene.render_to_file(camera=my_cam, paths=paths, filename=f'scene_plus_paths_with_stripe_{stripe_idx}_RU_{RU_idx}.png', 
+                                         resolution=[650, 500], num_samples=512, clip_at=20) 
+
+
+                # remove tx from the scene after computation
+                scene.remove(f"tx_stripe_{stripe_idx}_RU_{RU_idx}")
+
+                # render scene with tx and rx
+                if intermediate_reders:
+                    print(f' rendering scene after removing tx')
+                    scene.render_to_file(camera=my_cam, filename=f'scene_tx_removed_stripe_{stripe_idx}_RU_{RU_idx}.png', 
+                                         resolution=[650, 500], num_samples=512, clip_at=20) 
+
+                # todo check if GPU memory is freed
+
+
+
+    
+    
+    
+
+
+    """ example for 1 RU
     # Create sub-THz stripes
     stripe_start_pos = [2, 2.5, 3.5]
-    N_RUs = 40 #40 # todo adjust to size of the room (along y axis)
-    N_stripes = 10 #10 # todo adjust to size of the room (alang x axis)
+    N_RUs = 1 #40 # todo adjust to size of the room (along y axis)
+    N_stripes = 1 #10 # todo adjust to size of the room (alang x axis)
     space_between_RUs = 0.5 # in meters
     space_between_stripses = 0.5 # in meters
     for stripe_idx in range(N_stripes):
@@ -163,3 +279,64 @@ if __name__ == "__main__":
 
     # Render scene with new camera*
     scene.render_to_file(camera=my_cam, filename='scene_with_stripes.png', resolution=[650, 500], num_samples=512) # Increase num_samples to increase image quality
+
+    # set scene frequency
+    scene.frequency = 157.75e9 # Set frequency to 170 GHz
+
+    # Instantiate a path solver
+    # The same path solver can be used with multiple scenes
+    p_solver  = PathSolver()
+
+    # OFDM system parameters
+    BW = 12.5e9 # Bandwidth of the system
+    num_subcarriers = 2**15 #=32768
+    subcarrier_spacing= BW / num_subcarriers
+    f_axis = scene.frequency - BW/2 + subcarrier_spacing * np.arange(num_subcarriers)  # array of frequencies
+    print(f'subcarrier spacing = {subcarrier_spacing/1e6} MHz')
+    print(f' own faxis = faxis = {f_axis/1e9} GHz')
+
+    # Compute propagation paths
+    t1 = time.time()
+    paths = p_solver(scene=scene,
+                    max_depth=5,
+                    los=True,
+                    specular_reflection=True,
+                    diffuse_reflection=False,
+                    refraction=True,
+                    synthetic_array=False,
+                    seed=41)
+
+
+    # Compute frequencies of subcarriers relative to the carrier frequency
+    frequencies = subcarrier_frequencies(num_subcarriers, subcarrier_spacing)
+
+    # Compute channel frequency response
+    h_freq = paths.cfr(frequencies=frequencies,
+                    normalize=True, # Normalize energy
+                    normalize_delays=True,
+                    out_type="numpy")
+
+    t2 = time.time()
+    print(f"Time to compute paths: {t2-t1:.2f} seconds")
+
+    # Shape: [num_rx, num_rx_ant, num_tx, num_tx_ant, num_time_steps, num_subcarriers]
+    print("Shape of h_freq: ", h_freq.shape)
+    print(f' builtin faxis = faxis = {frequencies/1e9} GHz')
+
+    # Plot absolute value
+    habs = np.abs(h_freq)[0,0,0,0,0,:]
+    plt.figure()
+    plt.plot(np.squeeze(frequencies)/1e9, np.squeeze(habs));
+    plt.xlabel("Baseband frequency (GHz)");
+    plt.ylabel(r"|$h_\text{freq}$|");
+    plt.title("Channel frequency response");
+    plt.savefig("cfr.png")
+
+    plt.figure()
+    plt.plot(np.squeeze(f_axis)/1e9, np.squeeze(habs));
+    plt.xlabel("frequency (GHz)");
+    plt.ylabel(r"|$h_\text{freq}$|");
+    plt.title("Channel frequency response");
+    plt.savefig("cfr_2.png")
+"""
+    print(f'done')
