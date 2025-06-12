@@ -71,7 +71,6 @@ def set_materials(scene):
     sub_GHz = 3.5e9
     sub_THz = 157.75e9
     print(f"Checking materials at {sub_GHz/1e9}GHz and {sub_THz/1e12}THz")
-    # todo set values at 170 GHZ
     for key, value in scene.objects.items():
         print(f'---------------{key=}----------------')
         # Print name of assigned radio material for different frequenies
@@ -93,7 +92,7 @@ if __name__ == "__main__":
     setup()
 
     # TODO load params from config file
-    intermediate_reders = True # slows down the program a lot => only for debugging!!!
+    intermediate_reders = False # slows down the program a lot => only for debugging!!!
 
     # load scene# Load scene
     scene = load_scene(r"/home/user/6GTandem_RT_server/6G_Tandem_kantoorruimte_v10/office_space.xml") 
@@ -151,7 +150,7 @@ if __name__ == "__main__":
     # Instantiate a path solver
     # The same path solver can be used with multiple scenes
     p_solver  = PathSolver()
-
+    print(f'path solver loop mode: {p_solver.loop_mode}') #symbolic mode is the fastest! 
     
 
     for ue_idx, ue_xyz in enumerate(ue_positions):
@@ -218,13 +217,6 @@ if __name__ == "__main__":
 
                 # todo store values of CFR
 
-                # render scene with tx and rx
-                if intermediate_reders:
-                    print(f' rendering scene with paths')
-                    scene.render_to_file(camera=my_cam, paths=paths, filename=f'scene_plus_paths_with_stripe_{stripe_idx}_RU_{RU_idx}.png', 
-                                         resolution=[650, 500], num_samples=512, clip_at=20) 
-
-
                 # remove tx from the scene after computation
                 scene.remove(f"tx_stripe_{stripe_idx}_RU_{RU_idx}")
 
@@ -235,6 +227,13 @@ if __name__ == "__main__":
                                          resolution=[650, 500], num_samples=512, clip_at=20) 
 
                 # todo check if GPU memory is freed
+
+        # logging
+        print(f'Finished processing UE {ue_idx} with all stripes and RUs.')
+
+        # todo: intermediate save of the results to file 
+
+        # todo: remove receiver from the scene
 
 
 
