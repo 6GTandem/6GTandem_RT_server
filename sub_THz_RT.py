@@ -135,7 +135,6 @@ if __name__ == "__main__":
     N_stripes = 2 #10 # todo adjust to size of the room (alang x axis)
     space_between_RUs = 0.5 # in meters
     space_between_stripses = 0.5 # in meters
-
     # todo load from yaml file OFDM system parameters
     BW = 12.5e9 # Bandwidth of the system
     num_subcarriers = 2**15 #=32768
