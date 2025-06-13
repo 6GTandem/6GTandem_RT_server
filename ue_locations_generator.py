@@ -100,16 +100,16 @@ zone_labels = (['Zone 1'] * samples_zone1.shape[0] +
                ['Zone 4'] * samples_zone4.shape[0] +
                ['Grid'] * samples_grid.shape[0])
 
-stripe_labels = (['not on grid'] * samples_zone1.shape[0] +
-               ['not on grid'] * samples_zone2.shape[0] +
-               ['not on grid'] * samples_zone3.shape[0] +
-               ['not on grid'] * samples_zone4.shape[0] +
+stripe_labels = ([np.nan] * samples_zone1.shape[0] +
+               [np.nan] * samples_zone2.shape[0] +
+               [np.nan] * samples_zone3.shape[0] +
+               [np.nan] * samples_zone4.shape[0] +
                stripe_labels)
 
-ru_labels = (['not on grid'] * samples_zone1.shape[0] +
-               ['not on grid'] * samples_zone2.shape[0] +
-               ['not on grid'] * samples_zone3.shape[0] +
-               ['not on grid'] * samples_zone4.shape[0] +
+ru_labels = ([np.nan] * samples_zone1.shape[0] +
+               [np.nan] * samples_zone2.shape[0] +
+               [np.nan] * samples_zone3.shape[0] +
+               [np.nan] * samples_zone4.shape[0] +
                ru_labels)
 
 # Create the Dataset
@@ -119,11 +119,15 @@ ds = xr.Dataset(
         y=("sample", all_samples[:, 1].astype(np.float32)),
         z=("sample", all_samples[:, 2].astype(np.float32)),
         zone=("sample", zone_labels),
-        stripe_idx=stripe_labels,
-        ru_idx=ru_labels 
+        stripe_idx=("sample", stripe_labels),
+        ru_idx=("sample", ru_labels) 
     )
 )
 
 # Save to NetCDF (efficient binary format)
 ds.to_netcdf("ue_locations.nc")
 print("Saved samples to 'ue_locations.nc'")
+
+
+# todo some grid locations are in a cabinet => can be filtered out later 
+# based on coordinates of the grid locations and the cabinets
