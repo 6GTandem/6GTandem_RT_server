@@ -1,0 +1,129 @@
+import numpy as np 
+import xarray as xr
+
+# coordinates of the general zone
+z_height = 1.5
+x_start = 1.08
+x_stop = 9.34
+y_start = 1.88
+y_stop = 24.89
+
+
+# zone 1 coordinates
+x_zone1_start = 4.9
+x_zone1_stop = x_stop
+y_zone1_start = y_start
+y_zone1_stop = y_stop
+area_zone1 = (x_zone1_stop - x_zone1_start) * (y_zone1_stop - y_zone1_start)
+
+# zone 2 coordinates
+x_zone2_start = x_start
+x_zone2_stop = x_zone1_start
+y_zone2_start = 5.51
+y_zone2_stop = 14.2
+area_zone2 = (x_zone2_stop - x_zone2_start) * (y_zone2_stop - y_zone2_start)
+
+# zone 3 coordinates
+x_zone3_start = x_start
+x_zone3_stop = x_zone1_start
+y_zone3_start = 15.6
+y_zone3_stop = 23.65
+area_zone3 = (x_zone3_stop - x_zone3_start) * (y_zone3_stop - y_zone3_start)
+
+# zone 4 coordinates
+x_zone4_start = x_start
+x_zone4_stop = x_zone1_start
+y_zone4_start = y_start
+y_zone4_stop = 4.19
+area_zone4 = (x_zone4_stop - x_zone4_start) * (y_zone4_stop - y_zone4_start)
+
+# stay 10 cm away from the walls
+safety_offset = 0.1
+
+# generate samples for zone 1
+num_point_zone1 = 10000 #todo check running time and adjust accordingly 
+x_zone1 = np.random.uniform(x_zone1_start - safety_offset, x_zone1_stop - safety_offset, num_point_zone1)
+y_zone1 = np.random.uniform(y_zone1_start - safety_offset, y_zone1_stop - safety_offset, num_point_zone1)
+samples_zone1 = np.column_stack((x_zone1, y_zone1, z_height * np.ones(num_point_zone1)))
+
+# generate samples for Zone 2
+num_point_zone2 = int(num_point_zone1 * area_zone2 / area_zone1) # scale the number of points based on area
+x_zone2 = np.random.uniform(x_zone2_start + safety_offset, x_zone2_stop - safety_offset, num_point_zone2)
+y_zone2 = np.random.uniform(y_zone2_start + safety_offset, y_zone2_stop - safety_offset, num_point_zone2)
+samples_zone2 = np.column_stack((x_zone2, y_zone2, z_height * np.ones(num_point_zone2)))
+
+# generate samples for Zone 3
+num_point_zone3 = int(num_point_zone1 * area_zone3 / area_zone1) # scale the number of points based on area
+x_zone3 = np.random.uniform(x_zone3_start + safety_offset, x_zone3_stop - safety_offset, num_point_zone3)
+y_zone3 = np.random.uniform(y_zone3_start + safety_offset, y_zone3_stop - safety_offset, num_point_zone3)
+samples_zone3 = np.column_stack((x_zone3, y_zone3, z_height * np.ones(num_point_zone3)))
+
+# generate samples for Zone 4
+num_point_zone4 = int(num_point_zone1 * area_zone4 / area_zone1) # scale the number of points based on area
+x_zone4 = np.random.uniform(x_zone4_start + safety_offset, x_zone4_stop - safety_offset, num_point_zone4)
+y_zone4 = np.random.uniform(y_zone4_start + safety_offset, y_zone4_stop - safety_offset, num_point_zone4)
+samples_zone4 = np.column_stack((x_zone4, y_zone4, z_height * np.ones(num_point_zone4)))
+
+# todo grid under each RU 
+stripe_start_pos = [2.08, 2.88, 3.5]
+N_RUs = 42 #40 # todo adjust to size of the room (along y axis)
+N_stripes = 13 #10 # todo adjust to size of the room (alang x axis)
+space_between_RUs = 0.5 # in meters
+space_between_stripses = 0.5 # in meters
+samples_grid = np.zeros((N_RUs * N_stripes, 3))
+stripe_labels = []
+ru_labels = []
+for stripe_idx in range(N_stripes):
+    for RU_idx in range(N_RUs):
+        # compute RU position
+        pos = [stripe_start_pos[0] + stripe_idx * space_between_stripses,
+                  stripe_start_pos[1] + RU_idx * space_between_RUs,
+                  z_height]
+        samples_grid[stripe_idx * N_RUs + RU_idx, :] = pos
+        stripe_labels.append(stripe_idx)
+        ru_labels.append(RU_idx)
+
+
+
+print(f"Zone 1: area: {area_zone1} - {samples_zone1.shape[0]} samples")
+print(f"Zone 2: area: {area_zone2} - {samples_zone2.shape[0]} samples")
+print(f"Zone 3: area: {area_zone3} - {samples_zone3.shape[0]} samples")
+print(f"Zone 4: area: {area_zone4} - {samples_zone4.shape[0]} samples")
+print(f'Total samples: {samples_zone1.shape[0] + samples_zone2.shape[0] + samples_zone3.shape[0] + samples_zone4.shape[0]}')
+
+# todo save results to a file
+# Combine samples into a single array
+all_samples = np.vstack([samples_zone1, samples_zone2, samples_zone3, samples_zone4, samples_grid])
+zone_labels = (['Zone 1'] * samples_zone1.shape[0] +
+               ['Zone 2'] * samples_zone2.shape[0] +
+               ['Zone 3'] * samples_zone3.shape[0] +
+               ['Zone 4'] * samples_zone4.shape[0] +
+               ['Grid'] * samples_grid.shape[0])
+
+stripe_labels = (['not on grid'] * samples_zone1.shape[0] +
+               ['not on grid'] * samples_zone2.shape[0] +
+               ['not on grid'] * samples_zone3.shape[0] +
+               ['not on grid'] * samples_zone4.shape[0] +
+               stripe_labels)
+
+ru_labels = (['not on grid'] * samples_zone1.shape[0] +
+               ['not on grid'] * samples_zone2.shape[0] +
+               ['not on grid'] * samples_zone3.shape[0] +
+               ['not on grid'] * samples_zone4.shape[0] +
+               ru_labels)
+
+# Create the Dataset
+ds = xr.Dataset(
+    data_vars=dict(
+        x=("sample", all_samples[:, 0].astype(np.float32)),
+        y=("sample", all_samples[:, 1].astype(np.float32)),
+        z=("sample", all_samples[:, 2].astype(np.float32)),
+        zone=("sample", zone_labels),
+        stripe_idx=stripe_labels,
+        ru_idx=ru_labels 
+    )
+)
+
+# Save to NetCDF (efficient binary format)
+ds.to_netcdf("ue_locations.nc")
+print("Saved samples to 'ue_locations.nc'")
