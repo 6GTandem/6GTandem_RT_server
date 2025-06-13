@@ -2,6 +2,7 @@ import sionna.rt
 import time
 import tensorflow as tf
 import matplotlib.pyplot as plt
+import xarray as xr
 import numpy as np
 from sionna.rt import load_scene, AntennaArray, PlanarArray, Transmitter, Receiver, Camera,\
                       PathSolver, RadioMapSolver, subcarrier_frequencies
@@ -84,12 +85,16 @@ def set_materials(scene):
             print("XPD coefficient:", value.radio_material.xpd_coefficient.numpy())
 
 
-
-
-
 if __name__ == "__main__":
     # check versions and set up GPU
     setup()
+
+    # todo compute or load all UE posotions 
+    # todo load file name from yaml config file
+    ds = xr.load_dataset("ue_locations.nc")
+
+    ue_pos = [7, 10, 1]
+    ue_positions = [ue_pos]
 
     # TODO load params from config file
     intermediate_reders = False # slows down the program a lot => only for debugging!!!
@@ -125,9 +130,6 @@ if __name__ == "__main__":
                                 pattern="iso",
                                 polarization="cross")
 
-    # todo compute or load all UE posotions
-    ue_pos = [7, 10, 1]
-    ue_positions = [ue_pos]
 
     # todo: sub-THz stripe specs => load from yamls config file
     stripe_start_pos = [2, 2.5, 3.5]
@@ -151,8 +153,10 @@ if __name__ == "__main__":
     p_solver  = PathSolver()
     print(f'path solver loop mode: {p_solver.loop_mode}') #symbolic mode is the fastest! 
     
+    for ue_idx in range(ds.dims['sample']): # loop over all UE postions
+        x, y, z = ds.x.value[ue_idx], ds.y.value[ue_idx], ds.z.value[ue_idx]
+        ue_pos = [x, y, z]
 
-    for ue_idx, ue_xyz in enumerate(ue_positions):
         # Create a receiver
         rx = Receiver(name=f"rx_{ue_idx}",
                     position=ue_pos,
