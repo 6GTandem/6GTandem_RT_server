@@ -91,7 +91,7 @@ if __name__ == "__main__":
 
     # todo compute or load all UE posotions 
     # todo load file name from yaml config file
-    ds = xr.load_dataset("ue_locations.nc")
+    ds = xr.load_dataset(r"/home/user/6GTandem_RT_server/ue_locations/ue_locations_579.nc")
 
     ue_pos = [7, 10, 1]
     ue_positions = [ue_pos]
@@ -153,9 +153,11 @@ if __name__ == "__main__":
     p_solver  = PathSolver()
     print(f'path solver loop mode: {p_solver.loop_mode}') #symbolic mode is the fastest! 
     
-    for ue_idx in range(ds.dims['sample']): # loop over all UE postions
-        x, y, z = ds.x.value[ue_idx], ds.y.value[ue_idx], ds.z.value[ue_idx]
-        ue_pos = [x, y, z]
+    for ue_idx in range(ds.dims['user']): # loop over all UE postions
+        x, y, z = ds.x.values[ue_idx], ds.y.values[ue_idx], ds.z.values[ue_idx]
+        print(f'type of x: {type(x)}')
+        ue_pos = [float(x), float(y), float(z)]
+        print(f'type of uepos: {type(ue_pos)}')
 
         # Create a receiver
         rx = Receiver(name=f"rx_{ue_idx}",
@@ -217,6 +219,7 @@ if __name__ == "__main__":
                 print(f"Time to compute paths and CFR: {t2-t1:.2f} seconds")
                 # Shape: [num_rx, num_rx_ant, num_tx, num_tx_ant, num_time_steps, num_subcarriers]
                 print("Shape of h_freq: ", h_freq.shape)
+                print(f'type of h_freq: {h_freq.dtype}')
 
                 # todo store values of CFR
 

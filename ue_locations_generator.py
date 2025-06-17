@@ -123,9 +123,13 @@ ru_labels = np.array([np.nan] * samples_zone1.shape[0] +
                [np.nan] * samples_zone4.shape[0] +
                ru_labels)
 
+# unique id per user
+user_ids = np.arange(nr_ue_locs)
+
 # Create the Dataset
 ds = xr.Dataset(
     data_vars={
+        "user_id": ("user", user_ids),
         "x": ("user", all_samples[:, 0].astype(np.float32)),
         "y": ("user", all_samples[:, 1].astype(np.float32)),
         "z": ("user", all_samples[:, 2].astype(np.float32)),
@@ -149,7 +153,7 @@ ds = xr.Dataset(
 # )
 
 # Save to NetCDF (efficient binary format)
-basepath = r'/home/user/6GTandem_RT_server/ue_locations' #todo read from yaml file
+basepath = r'/home/user/6GTandem_RT_server/dataset/ue_locations' #todo read from yaml file
 file_name = os.path.join(basepath, f"ue_locations_{nr_ue_locs}.nc")
 ds.to_netcdf(file_name)
 print(f"Saved samples to {file_name}")
