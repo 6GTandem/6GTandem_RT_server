@@ -2,34 +2,57 @@
 import xarray as xr
 
 # Load the dataset
-ds = xr.load_dataset("ue_locations.nc")
+ds = xr.load_dataset(r"/home/user/6GTandem_RT_server/ue_locations/ue_locations_579.nc")
 
 # Print dataset overview
 print(ds)
 
-# Unique zone names
-print("Zones in dataset:", ds.zone.values.tolist())
+# View all available zones
+print("Available zones:", set(ds['zone'].values))
 
-# Access all Zone 1 samples
-zone1 = ds.sel(sample=(ds.zone == "Zone 1"))
-print("Zone 1 samples:", zone1)
+# --- Select users by zone ---
+zone1_users = ds.where(ds['zone'] == 'Zone 1', drop=True)
+zone2_users = ds.where(ds['zone'] == 'Zone 2', drop=True)
+zone3_users = ds.where(ds['zone'] == 'Zone 3', drop=True)
+zone4_users = ds.where(ds['zone'] == 'Zone 4', drop=True)
+grid_users  = ds.where(ds['zone'] == 'Grid', drop=True)
 
-# Get samples that belong to the Grid
-grid_samples = ds.sel(sample=(ds.zone == "Grid"))
-print("Grid sample count:", grid_samples.dims["sample"])
+# Print number of users per zone
+print(f"Zone 1 users: {zone1_users.dims['user']}")
+print(f"Zone 2 users: {zone2_users.dims['user']}")
+print(f"Zone 3 users: {zone3_users.dims['user']}")
+print(f"Zone 4 users: {zone4_users.dims['user']}")
+print(f"Grid users:  {grid_users.dims['user']}")
 
-# Example: Samples at stripe 3
-specific_ru = ds.where((ds.stripe_idx == 3), drop=True)
-print("Stripe 3:", specific_ru.dims["sample"])
+# As xarray variables
+x_coords = zone1_users['x']
+y_coords = zone1_users['y']
+z_coords = zone1_users['z']
 
-# Example: get coordinates of UE location under stripe 4 and RU 10
-specific_ru= ds.where((ds.stripe_idx == 4) & (ds.ru_idx == 10), drop=True)
-print("Stripe 3, RU 10:", specific_ru)
+# Or convert to NumPy for further processing
+positions_zone1 = zone1_users[['x', 'y', 'z']].to_array().values.T  # shape: (num_users, 3)
 
-x_coords = specific_ru.x.values
-y_coords = specific_ru.y.values
-z_coords = specific_ru.z.values
+# select users based if they are on the grid or not
+on_grid_users = ds.where(ds['ue_on_stripe_grid'], drop=True)
+off_grid_users = ds.where(~ds['ue_on_stripe_grid'], drop=True)
 
-print("X:", x_coords)
-print("Y:", y_coords)
-print("Z:", z_coords)
+print(f"Users on grid: {on_grid_users.dims['user']}")
+print(f"Users off grid: {off_grid_users.dims['user']}")
+
+# get user under stripe idx and ru idx
+stripe_idx = 2
+ru_idx = 10
+matched_user = ds.where(
+    (ds['ue_on_stripe_grid']) &
+    (ds['ue_stripe_idx'] == stripe_idx) &
+    (ds['ue_ru_idx'] == ru_idx),
+    drop=True
+)
+
+print(f"User at stripe: {stripe_idx} and RU: {ru_idx}: x={matched_user['x'].values}, "
+        f"y={matched_user['y'].values}, "
+        f"z={matched_user['z'].values}")
+
+
+
+

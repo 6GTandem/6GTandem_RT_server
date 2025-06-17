@@ -1,5 +1,6 @@
 import numpy as np 
 import xarray as xr
+import os
 
 # coordinates of the general zone
 z_height = 1.5
@@ -41,9 +42,9 @@ area_zone4 = (x_zone4_stop - x_zone4_start) * (y_zone4_stop - y_zone4_start)
 safety_offset = 0.1
 
 # generate samples for zone 1
-num_point_zone1 = 10000 #todo check running time and adjust accordingly 
-x_zone1 = np.random.uniform(x_zone1_start - safety_offset, x_zone1_stop - safety_offset, num_point_zone1)
-y_zone1 = np.random.uniform(y_zone1_start - safety_offset, y_zone1_stop - safety_offset, num_point_zone1)
+num_point_zone1 = 20 #todo check running time and adjust accordingly 
+x_zone1 = np.random.uniform(x_zone1_start + safety_offset, x_zone1_stop - safety_offset, num_point_zone1)
+y_zone1 = np.random.uniform(y_zone1_start + safety_offset, y_zone1_stop - safety_offset, num_point_zone1)
 samples_zone1 = np.column_stack((x_zone1, y_zone1, z_height * np.ones(num_point_zone1)))
 
 # generate samples for Zone 2
@@ -89,24 +90,34 @@ print(f"Zone 1: area: {area_zone1} - {samples_zone1.shape[0]} samples")
 print(f"Zone 2: area: {area_zone2} - {samples_zone2.shape[0]} samples")
 print(f"Zone 3: area: {area_zone3} - {samples_zone3.shape[0]} samples")
 print(f"Zone 4: area: {area_zone4} - {samples_zone4.shape[0]} samples")
-print(f'Total samples: {samples_zone1.shape[0] + samples_zone2.shape[0] + samples_zone3.shape[0] + samples_zone4.shape[0]}')
 
 # todo save results to a file
 # Combine samples into a single array
 all_samples = np.vstack([samples_zone1, samples_zone2, samples_zone3, samples_zone4, samples_grid])
-zone_labels = (['Zone 1'] * samples_zone1.shape[0] +
+nr_ue_locs = all_samples.shape[0]
+print(f'Total samples: {nr_ue_locs}')
+
+zone_labels = np.array(['Zone 1'] * samples_zone1.shape[0] +
                ['Zone 2'] * samples_zone2.shape[0] +
                ['Zone 3'] * samples_zone3.shape[0] +
                ['Zone 4'] * samples_zone4.shape[0] +
                ['Grid'] * samples_grid.shape[0])
 
-stripe_labels = ([np.nan] * samples_zone1.shape[0] +
+ue_on_stripe_grid = np.array(
+    [False] * (samples_zone1.shape[0] +
+               samples_zone2.shape[0] +
+               samples_zone3.shape[0] +
+               samples_zone4.shape[0]) +
+    [True] * samples_grid.shape[0]
+) # additional boolean to check if the ue is under the stripe grid or in a zone
+
+stripe_labels = np.array([np.nan] * samples_zone1.shape[0] +
                [np.nan] * samples_zone2.shape[0] +
                [np.nan] * samples_zone3.shape[0] +
                [np.nan] * samples_zone4.shape[0] +
                stripe_labels)
 
-ru_labels = ([np.nan] * samples_zone1.shape[0] +
+ru_labels = np.array([np.nan] * samples_zone1.shape[0] +
                [np.nan] * samples_zone2.shape[0] +
                [np.nan] * samples_zone3.shape[0] +
                [np.nan] * samples_zone4.shape[0] +
@@ -114,19 +125,34 @@ ru_labels = ([np.nan] * samples_zone1.shape[0] +
 
 # Create the Dataset
 ds = xr.Dataset(
-    data_vars=dict(
-        x=("sample", all_samples[:, 0].astype(np.float32)),
-        y=("sample", all_samples[:, 1].astype(np.float32)),
-        z=("sample", all_samples[:, 2].astype(np.float32)),
-        zone=("sample", zone_labels),
-        stripe_idx=("sample", stripe_labels),
-        ru_idx=("sample", ru_labels) 
-    )
+    data_vars={
+        "x": ("user", all_samples[:, 0].astype(np.float32)),
+        "y": ("user", all_samples[:, 1].astype(np.float32)),
+        "z": ("user", all_samples[:, 2].astype(np.float32)),
+        "zone": ("user", zone_labels),
+        "ue_stripe_idx": ("user", stripe_labels),
+        "ue_ru_idx": ("user", ru_labels),
+        "ue_on_stripe_grid": ("user", ue_on_stripe_grid)
+    }
 )
 
+
+# ds = xr.Dataset(
+#     data_vars=dict(
+#         x=("sample", all_samples[:, 0].astype(np.float32)),
+#         y=("sample", all_samples[:, 1].astype(np.float32)),
+#         z=("sample", all_samples[:, 2].astype(np.float32)),
+#         zone=("sample", zone_labels),
+#         stripe_idx=("sample", stripe_labels),
+#         ru_idx=("sample", ru_labels) 
+#     )
+# )
+
 # Save to NetCDF (efficient binary format)
-ds.to_netcdf("ue_locations.nc")
-print("Saved samples to 'ue_locations.nc'")
+basepath = r'/home/user/6GTandem_RT_server/ue_locations' #todo read from yaml file
+file_name = os.path.join(basepath, f"ue_locations_{nr_ue_locs}.nc")
+ds.to_netcdf(file_name)
+print(f"Saved samples to {file_name}")
 
 
 # todo some grid locations are in a cabinet => can be filtered out later 
