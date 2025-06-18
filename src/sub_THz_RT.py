@@ -4,10 +4,11 @@ import tensorflow as tf
 import matplotlib.pyplot as plt
 import xarray as xr
 import numpy as np
+import os
 from sionna.rt import load_scene, AntennaArray, PlanarArray, Transmitter, Receiver, Camera,\
                       PathSolver, RadioMapSolver, subcarrier_frequencies
 from utils import ituf_glass_callback, ituf_concrete_callback, ituf_metal_callback, \
-                  ituf_polystyrene_callback, ituf_mdf_callback
+                  ituf_polystyrene_callback, ituf_mdf_callback, load_config
 
 def setup():
     # check versions and set up GPU
@@ -28,7 +29,7 @@ def setup():
     else:
         print("No GPU found, using CPU.")
 
-def set_materials(scene):
+def set_materials(scene, config):
     # check which materials are available in the scene
     print("Available materials:")
     for name, obj in scene.objects.items():
@@ -69,9 +70,9 @@ def set_materials(scene):
 
     # check conductivity and relative permittivity at different frequencies
     # loop through material names and print them
-    sub_GHz = 3.5e9
-    sub_THz = 157.75e9
-    print(f"Checking materials at {sub_GHz/1e9}GHz and {sub_THz/1e12}THz")
+    sub_GHz = config['sub10GHz_config']['fc']
+    sub_THz = config['subTHz_config']['fc']
+    print(f"Checking materials at {sub_GHz/1e9} GHz and {sub_THz/1e9} GHz")
     for key, value in scene.objects.items():
         print(f'---------------{key=}----------------')
         # Print name of assigned radio material for different frequenies
@@ -89,18 +90,19 @@ if __name__ == "__main__":
     # check versions and set up GPU
     setup()
 
-    # todo compute or load all UE posotions 
-    # todo load file name from yaml config file
-    ds = xr.load_dataset(r"/home/user/6GTandem_RT_server/ue_locations/ue_locations_579.nc")
+    # load config file
+    config = load_config()
 
-    ue_pos = [7, 10, 1]
-    ue_positions = [ue_pos]
+    # compute or load all UE posotions 
+    basepath = config['paths']['basepath']
+    ue_path = os.path.join(basepath, 'dataset','ue_locations')
+    ds = xr.load_dataset(os.path.join(ue_path, 'ue_locations_716.nc')) # todo get .nc filename automatically based on config
 
-    # TODO load params from config file
-    intermediate_reders = False # slows down the program a lot => only for debugging!!!
+    # load params from config file
+    intermediate_reders = config['random_configs']['intermediate_renders'] # slows down the program a lot => only for debugging!!!
 
     # load scene# Load scene
-    scene = load_scene(r"/home/user/6GTandem_RT_server/6G_Tandem_kantoorruimte_v10/office_space.xml") 
+    scene = load_scene(config['paths']['scenepath']) 
 
     # preview scene 
     # Create new camera with different configuration
@@ -111,42 +113,45 @@ if __name__ == "__main__":
         scene.render_to_file(camera=my_cam, filename='empty_scene.png', resolution=[650, 500], num_samples=512, clip_at=20) # Increase num_samples to increase image quality
 
     # set materials for the scene
-    set_materials(scene)
+    set_materials(scene, config)
 
     # todo change because this is in y-z plane
-    N_antennas = 4 # Number of antennas in each direction (x and y)
+    N_antennas = config['antenna_config']['N_antennas_per_axis']
     scene.tx_array = PlanarArray(num_rows=N_antennas,
                                 num_cols=N_antennas,
                                 vertical_spacing=0.5,
                                 horizontal_spacing=0.5,
-                                pattern="iso",
-                                polarization="cross")
+                                pattern=config['antenna_config']['pattern'],
+                                polarization=config['antenna_config']['polarization'])
 
     # Configure antenna array for all receivers
     scene.rx_array = PlanarArray(num_rows=N_antennas,
                                 num_cols=N_antennas,
                                 vertical_spacing=0.5,
                                 horizontal_spacing=0.5,
-                                pattern="iso",
-                                polarization="cross")
+                                pattern=config['antenna_config']['pattern'],
+                                polarization=config['antenna_config']['polarization'])
 
 
-    # todo: sub-THz stripe specs => load from yamls config file
-    stripe_start_pos = [2, 2.5, 3.5]
-    N_RUs = 5 #40 # todo adjust to size of the room (along y axis)
-    N_stripes = 2 #10 # todo adjust to size of the room (alang x axis)
-    space_between_RUs = 0.5 # in meters
-    space_between_stripses = 0.5 # in meters
-    # todo load from yaml file OFDM system parameters
-    BW = 12.5e9 # Bandwidth of the system
-    num_subcarriers = 2**15 #=32768
-    subcarrier_spacing= BW / num_subcarriers
-    f_axis = scene.frequency - BW/2 + subcarrier_spacing * np.arange(num_subcarriers)  # array of frequencies 
+    # sub-THz stripe specs 
+    stripe_start_pos = config['stripe_config']['stripe_start_pos']
+    N_RUs = config['stripe_config']['N_RUs'] # adjust to size of the room (along y axis)
+    N_stripes = config['stripe_config']['N_stripes']# adjust to size of the room (alang x axis)
+    space_between_RUs = config['stripe_config']['space_between_RUs'] # in meters
+    space_between_stripses = config['stripe_config']['space_between_stripes'] # in meters
+   
+    # OFDM system parameters
+    BW = config['subTHz_config']['bw'] # Bandwidth of the system
+    num_subcarriers = config['subTHz_config']['num_subcarriers']
+    print(f'bw type: {type(BW)}')
+    print(f'bw type: {type(num_subcarriers)}')
+
+    subcarrier_spacing = BW / num_subcarriers
     frequencies = subcarrier_frequencies(num_subcarriers, subcarrier_spacing) # Compute baseband frequencies of subcarriers relative to the carrier frequency
     print(f'subcarrier spacing = {subcarrier_spacing/1e6} MHz')
 
     # set scene frequency
-    scene.frequency = 157.75e9 # Set frequency to fc 
+    scene.frequency = config['subTHz_config']['fc']# Set frequency to fc 
 
     # Instantiate a path solver
     # The same path solver can be used with multiple scenes
@@ -155,9 +160,7 @@ if __name__ == "__main__":
     
     for ue_idx in range(ds.dims['user']): # loop over all UE postions
         x, y, z = ds.x.values[ue_idx], ds.y.values[ue_idx], ds.z.values[ue_idx]
-        print(f'type of x: {type(x)}')
         ue_pos = [float(x), float(y), float(z)]
-        print(f'type of uepos: {type(ue_pos)}')
 
         # Create a receiver
         rx = Receiver(name=f"rx_{ue_idx}",

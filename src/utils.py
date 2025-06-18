@@ -1,4 +1,5 @@
 import numpy as np
+import yaml
 
 # define callbacks to set conductivity and relative permittivity based on ITUF materials from hexa-x
 def ituf_glass_callback(f_hz):
@@ -35,3 +36,8 @@ def ituf_mdf_callback(f_hz):
   c, d = 0.005, 1.0
   conductivity = c*np.power(f_ghz, d)
   return (relative_permittivity, conductivity)
+
+def load_config(path='config.yaml'):
+    with open(path, 'r') as file:
+        config = yaml.safe_load(file)
+    return config

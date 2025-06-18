@@ -1,6 +1,10 @@
 import numpy as np 
 import xarray as xr
 import os
+from utils import load_config
+
+# set seed
+np.random.seed(2025)
 
 # coordinates of the general zone
 z_height = 1.5
@@ -8,7 +12,6 @@ x_start = 1.08
 x_stop = 9.34
 y_start = 1.88
 y_stop = 24.89
-
 
 # zone 1 coordinates
 x_zone1_start = 4.9
@@ -41,8 +44,11 @@ area_zone4 = (x_zone4_stop - x_zone4_start) * (y_zone4_stop - y_zone4_start)
 # stay 10 cm away from the walls
 safety_offset = 0.1
 
+# load config file
+config = load_config()
+
 # generate samples for zone 1
-num_point_zone1 = 20 #todo check running time and adjust accordingly 
+num_point_zone1 = config['ue_locations_config']['num_locations_zone1'] #todo check running time and adjust accordingly 
 x_zone1 = np.random.uniform(x_zone1_start + safety_offset, x_zone1_stop - safety_offset, num_point_zone1)
 y_zone1 = np.random.uniform(y_zone1_start + safety_offset, y_zone1_stop - safety_offset, num_point_zone1)
 samples_zone1 = np.column_stack((x_zone1, y_zone1, z_height * np.ones(num_point_zone1)))
@@ -65,12 +71,12 @@ x_zone4 = np.random.uniform(x_zone4_start + safety_offset, x_zone4_stop - safety
 y_zone4 = np.random.uniform(y_zone4_start + safety_offset, y_zone4_stop - safety_offset, num_point_zone4)
 samples_zone4 = np.column_stack((x_zone4, y_zone4, z_height * np.ones(num_point_zone4)))
 
-# todo grid under each RU 
-stripe_start_pos = [2.08, 2.88, 3.5]
-N_RUs = 42 #40 # todo adjust to size of the room (along y axis)
-N_stripes = 13 #10 # todo adjust to size of the room (alang x axis)
-space_between_RUs = 0.5 # in meters
-space_between_stripses = 0.5 # in meters
+# grid under each RU 
+stripe_start_pos = config['stripe_config']['stripe_start_pos'] 
+N_RUs = config['stripe_config']['N_RUs']# adjust to size of the room (along y axis)
+N_stripes = config['stripe_config']['N_stripes'] # adjust to size of the room (alang x axis)
+space_between_RUs = config['stripe_config']['space_between_RUs'] # in meters
+space_between_stripses = config['stripe_config']['space_between_stripes'] # in meters
 samples_grid = np.zeros((N_RUs * N_stripes, 3))
 stripe_labels = []
 ru_labels = []
@@ -141,20 +147,10 @@ ds = xr.Dataset(
 )
 
 
-# ds = xr.Dataset(
-#     data_vars=dict(
-#         x=("sample", all_samples[:, 0].astype(np.float32)),
-#         y=("sample", all_samples[:, 1].astype(np.float32)),
-#         z=("sample", all_samples[:, 2].astype(np.float32)),
-#         zone=("sample", zone_labels),
-#         stripe_idx=("sample", stripe_labels),
-#         ru_idx=("sample", ru_labels) 
-#     )
-# )
-
-# Save to NetCDF (efficient binary format)
-basepath = r'/home/user/6GTandem_RT_server/dataset/ue_locations' #todo read from yaml file
-file_name = os.path.join(basepath, f"ue_locations_{nr_ue_locs}.nc")
+# Save 
+basepath = config['paths']['basepath']
+ue_path = os.path.join(basepath, 'dataset','ue_locations')
+file_name = os.path.join(ue_path, f"ue_locations_{nr_ue_locs}.nc")
 ds.to_netcdf(file_name)
 print(f"Saved samples to {file_name}")
 
