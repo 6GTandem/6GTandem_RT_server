@@ -6,6 +6,29 @@ from utils import load_config
 # set seed
 np.random.seed(2025)
 
+def is_point_outside_zones(x, y, z):
+    """ 
+    check if point is in none of the zones
+    """
+    # Zone 1
+    if x_zone1_start <= x <= x_zone1_stop and y_zone1_start <= y <= y_zone1_stop:
+        return False  # Inside Zone 1
+
+    # Zone 2
+    if x_zone2_start <= x <= x_zone2_stop and y_zone2_start <= y <= y_zone2_stop:
+        return False  # Inside Zone 2
+
+    # Zone 3
+    if x_zone3_start <= x <= x_zone3_stop and y_zone3_start <= y <= y_zone3_stop:
+        return False  # Inside Zone 3
+
+    # Zone 4
+    if x_zone4_start <= x <= x_zone4_stop and y_zone4_start <= y <= y_zone4_stop:
+        return False  # Inside Zone 4
+
+    # Otherwise, point is outside all zones
+    return True
+
 # coordinates of the general zone
 z_height = 1.5
 x_start = 1.08
@@ -80,15 +103,22 @@ space_between_stripses = config['stripe_config']['space_between_stripes'] # in m
 samples_grid = np.zeros((N_RUs * N_stripes, 3))
 stripe_labels = []
 ru_labels = []
+invalid_point_labels = []
 for stripe_idx in range(N_stripes):
     for RU_idx in range(N_RUs):
         # compute RU position
         pos = [stripe_start_pos[0] + stripe_idx * space_between_stripses,
                   stripe_start_pos[1] + RU_idx * space_between_RUs,
                   z_height]
+        
+        invalid_point = is_point_outside_zones(pos[0], pos[1], pos[2])
+        if invalid_point:
+            print(f'stripe {stripe_idx}, ru: {RU_idx}, pos: {pos} - point outside of zone: {invalid_point}')
+
         samples_grid[stripe_idx * N_RUs + RU_idx, :] = pos
         stripe_labels.append(stripe_idx)
         ru_labels.append(RU_idx)
+        invalid_point_labels.append(invalid_point)
 
 
 
@@ -129,6 +159,12 @@ ru_labels = np.array([np.nan] * samples_zone1.shape[0] +
                [np.nan] * samples_zone4.shape[0] +
                ru_labels)
 
+invalid_point_labels = ([False] * samples_zone1.shape[0] +
+               [False] * samples_zone2.shape[0] +
+               [False] * samples_zone3.shape[0] +
+               [False] * samples_zone4.shape[0] +
+               invalid_point_labels)
+
 # unique id per user
 user_ids = np.arange(nr_ue_locs)
 
@@ -142,7 +178,8 @@ ds = xr.Dataset(
         "zone": ("user", zone_labels),
         "ue_stripe_idx": ("user", stripe_labels),
         "ue_ru_idx": ("user", ru_labels),
-        "ue_on_stripe_grid": ("user", ue_on_stripe_grid)
+        "ue_on_stripe_grid": ("user", ue_on_stripe_grid),
+        "invalid_point": ("user", invalid_point_labels)
     }
 )
 

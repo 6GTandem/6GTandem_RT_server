@@ -4,6 +4,7 @@ import tensorflow as tf
 import matplotlib.pyplot as plt
 import xarray as xr
 import numpy as np
+from tqdm import tqdm
 import os
 from sionna.rt import load_scene, AntennaArray, PlanarArray, Transmitter, Receiver, Camera,\
                       PathSolver, RadioMapSolver, subcarrier_frequencies
@@ -93,10 +94,13 @@ if __name__ == "__main__":
     # load config file
     config = load_config()
 
-    # compute or load all UE posotions 
+    # set output path
+    channel_output_path = os.path.join(config['paths']['basepath'], 'dataset', 'sub_thz_channels')
+
+    # compute or load all UE posotions s
     basepath = config['paths']['basepath']
     ue_path = os.path.join(basepath, 'dataset','ue_locations')
-    ds = xr.load_dataset(os.path.join(ue_path, 'ue_locations_716.nc')) # todo get .nc filename automatically based on config
+    ds_users = xr.load_dataset(os.path.join(ue_path, 'ue_locations_547.nc')) # todo get .nc filename automatically based on config
 
     # load params from config file
     intermediate_reders = config['random_configs']['intermediate_renders'] # slows down the program a lot => only for debugging!!!
@@ -108,15 +112,17 @@ if __name__ == "__main__":
     # Create new camera with different configuration
     my_cam = Camera(position=[9,35,0.5], look_at=[0,0,3])
 
-    # Render scene with new camera*
+    # Render scene with new camera
     if intermediate_reders:
         scene.render_to_file(camera=my_cam, filename='empty_scene.png', resolution=[650, 500], num_samples=512, clip_at=20) # Increase num_samples to increase image quality
 
     # set materials for the scene
     set_materials(scene, config)
 
-    # todo change because this is in y-z plane
+    # configure tx and rx arrays
     N_antennas = config['antenna_config']['N_antennas_per_axis']
+    print(f'number antennas per axis: {N_antennas}')
+
     scene.tx_array = PlanarArray(num_rows=N_antennas,
                                 num_cols=N_antennas,
                                 vertical_spacing=0.5,
@@ -137,6 +143,7 @@ if __name__ == "__main__":
     stripe_start_pos = config['stripe_config']['stripe_start_pos']
     N_RUs = config['stripe_config']['N_RUs'] # adjust to size of the room (along y axis)
     N_stripes = config['stripe_config']['N_stripes']# adjust to size of the room (alang x axis)
+    total_N_RUs = N_RUs * N_stripes # total number of radio units
     space_between_RUs = config['stripe_config']['space_between_RUs'] # in meters
     space_between_stripses = config['stripe_config']['space_between_stripes'] # in meters
    
@@ -152,29 +159,67 @@ if __name__ == "__main__":
 
     # set scene frequency
     scene.frequency = config['subTHz_config']['fc']# Set frequency to fc 
+    print(f"scene frequency set to: {scene.frequency}")
 
     # Instantiate a path solver
     # The same path solver can be used with multiple scenes
     p_solver  = PathSolver()
     print(f'path solver loop mode: {p_solver.loop_mode}') #symbolic mode is the fastest! 
     
-    for ue_idx in range(ds.dims['user']): # loop over all UE postions
-        x, y, z = ds.x.values[ue_idx], ds.y.values[ue_idx], ds.z.values[ue_idx]
+    # loop over al ue postions
+    for ue_idx in range(ds_users.dims['user']):
+        # output file location
+        out_file = os.path.join(channel_output_path, f"channels_thz_ue_{ue_idx}.nc")
+        if os.path.exists(out_file):
+            print(f"User {ue_idx} already processed. Skipping.")
+            continue
+        if ds_users.invalid_point.values[ue_idx]:
+            print(f'User {ue_idx} is at an invalid location (within an object) and will not be processed. Skipping.')
+            continue
+
+        print(f"Processing user {ue_idx}...")
+
+        # get coordinates
+        x, y, z = ds_users.x.values[ue_idx], ds_users.y.values[ue_idx], ds_users.z.values[ue_idx]
         ue_pos = [float(x), float(y), float(z)]
 
         # Create a receiver
         rx = Receiver(name=f"rx_{ue_idx}",
                     position=ue_pos,
                     display_radius=0.5)
+        
+        # Point the receiver upwards
+        rx.look_at([ue_pos[0], ue_pos[1], 3.5]) # Receiver points upwards
+
+        # check orientation
+        #print(f'rx orientation: {rx.orientation}')
 
         # Add receiver instance to scene
         scene.add(rx)
 
+        # Preallocate channel tensor and index arrays (2x N^2 because cross polarization)
+        channel_tensor = np.empty(
+            (total_N_RUs, 2*N_antennas**2, 2*N_antennas**2, num_subcarriers),
+            dtype=np.complex64
+        )
+        stripe_idx_arr = np.empty(total_N_RUs, dtype=np.int32)
+        ru_idx_arr = np.empty(total_N_RUs, dtype=np.int32)
+
+        tx_idx = 0
+
+        # start time current ue computation
+        t_start_ue = time.time()
+
         # loop over all stripes
         for stripe_idx in range(N_stripes):
-            # loop over all RUs in the stripe
+            # start time 1 stripe computation
+            t1 = time.time()
+            # log
+            print(f'Processing UE {ue_idx} stripe {stripe_idx} ...')
+            # loop over all RUs 
             for RU_idx in range(N_RUs):
-                print(f'Processing UE {ue_idx} stripe {stripe_idx} RU {RU_idx}...')
+             
+              
             
                 # compute RU position
                 tx_pos = [stripe_start_pos[0] + stripe_idx * space_between_stripses,
@@ -192,6 +237,9 @@ if __name__ == "__main__":
                 # Point the transmitter downwards
                 tx.look_at([tx_pos[0], tx_pos[1], 0]) # Transmitter points downwards
 
+                # check orientation
+                #print(f'tx orientation: {tx.orientation}')
+
                 # render scene with tx and rx
                 if intermediate_reders:
                     print(f' rendering scene prior to path solver')
@@ -199,32 +247,40 @@ if __name__ == "__main__":
                                         resolution=[650, 500], num_samples=512, clip_at=20) 
 
 
-                # Compute propagation paths
-                t1 = time.time()
+
+                # todo recheck this
                 paths = p_solver(scene=scene,
                                 max_depth=5,
                                 los=True,
                                 specular_reflection=True,
-                                diffuse_reflection=False,
+                                diffuse_reflection=False, # no scattering
                                 refraction=True,
                                 synthetic_array=False,
                                 seed=41)
 
-
-
                 # Compute channel frequency response
+                # Shape: [num_rx, num_rx_ant, num_tx, num_tx_ant, num_time_steps, num_subcarriers]
+                # note that because of cross polarization we get 2*num_rx_ant and 2*num_tx_ant
+                # todo to be checked: structured as [ant_1_pol_1, ant_1_pol_2, ant_2_pol_1, ant_2_pol_2, ..., ant_N_pol_2]
                 h_freq = paths.cfr(frequencies=frequencies,
-                                normalize=True, # Normalize energy
                                 normalize_delays=True,
                                 out_type="numpy")
+                #print("Shape of h_freq: ", h_freq.shape)
 
-                t2 = time.time()
-                print(f"Time to compute paths and CFR: {t2-t1:.2f} seconds")
-                # Shape: [num_rx, num_rx_ant, num_tx, num_tx_ant, num_time_steps, num_subcarriers]
-                print("Shape of h_freq: ", h_freq.shape)
-                print(f'type of h_freq: {h_freq.dtype}')
+                # todo check shapes
+                # reshape to [2*nr_rx_antennas, 2*nr_tx_antennas, nr_subcarriers]
+                h_freq = np.squeeze(h_freq)
+                #print("Shape of h_freq post squeeze: ", h_freq.shape)
 
-                # todo store values of CFR
+                # plug into channel tensor
+                channel_tensor[tx_idx] = h_freq
+
+                # assign stripe and ru idx
+                stripe_idx_arr[tx_idx] = stripe_idx
+                ru_idx_arr[tx_idx] = RU_idx
+
+                # increment tx idx counter
+                tx_idx += 1
 
                 # remove tx from the scene after computation
                 scene.remove(f"tx_stripe_{stripe_idx}_RU_{RU_idx}")
@@ -235,10 +291,59 @@ if __name__ == "__main__":
                     scene.render_to_file(camera=my_cam, filename=f'scene_tx_removed_stripe_{stripe_idx}_RU_{RU_idx}.png', 
                                          resolution=[650, 500], num_samples=512, clip_at=20) 
 
-                # todo check if GPU memory is freed
+            # end time for 1 stripe
+            t2 = time.time()
+            print(f"Time to compute stripe {stripe_idx}: {t2-t1:.2f} seconds")
 
+        # remove rx from the scene after computation
+        scene.remove(f"rx_{ue_idx}")
+        
         # logging
-        print(f'Finished processing UE {ue_idx} with all stripes and RUs.')
+        t_end_ue = time.time()
+        print(f'Finished processing UE {ue_idx} in {t_end_ue-t_start_ue:.2f} seconds')
+
+        # save channel tensor for curren ue
+        # Get user attributes
+        user_attrs = {
+            "user_idx": int(ue_idx),
+            "user_x": float(ds_users["x"][ue_idx]),
+            "user_y": float(ds_users["y"][ue_idx]),
+            "user_z": float(ds_users["z"][ue_idx]),
+            "zone": str(ds_users["zone"][ue_idx].values),
+            "ue_stripe_idx": (
+                float(ds_users["ue_stripe_idx"][ue_idx])
+                if not np.isnan(ds_users["ue_stripe_idx"][ue_idx])
+                else "NaN"
+            ),
+            "ue_ru_idx": (
+                float(ds_users["ue_ru_idx"][ue_idx])
+                if not np.isnan(ds_users["ue_ru_idx"][ue_idx])
+                else "NaN"
+            ),
+        }
+
+        ds_user_channels = xr.Dataset(
+            data_vars={
+                "channel": (
+                    ("tx_pair", "rx_ant", "tx_ant", "subcarrier"),
+                    channel_tensor
+                )
+            },
+            coords={
+                "tx_pair": np.arange(total_N_RUs),
+                "stripe_idx": ("tx_pair", stripe_idx_arr),
+                "RU_idx": ("tx_pair", ru_idx_arr),
+                "rx_ant": np.arange(2*N_antennas**2),
+                "tx_ant": np.arange(2*N_antennas**2),
+                "subcarrier": np.arange(num_subcarriers),
+            },
+            attrs=user_attrs
+        )
+
+
+        ds_user_channels.to_netcdf(out_file, format="NETCDF4", auto_complex=True)
+        print(f"Saved user {ue_idx} to {out_file}")
+
 
         # todo: intermediate save of the results to file 
 

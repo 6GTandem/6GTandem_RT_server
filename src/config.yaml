@@ -21,7 +21,7 @@ sub10GHz_config:
   num_subcarriers: 1024 # todo change to decent number
 
 ue_locations_config:
-  num_locations_zone1: 100 #other locations are computed based on area
+  num_locations_zone1: 1 #other locations are computed based on area
 
 paths:
   basepath: "/home/user/6GTandem_RT_server"
@@ -29,3 +29,5 @@ paths:
 
 random_configs:
   intermediate_renders: False # intermediatelly render the scene
+  ue_orientation: 'up' #ue array is pointed upward (not used just as FYI)
+  RU_orientation: 'down' #ru array is pointed downward (not used just as FYI)

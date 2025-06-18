@@ -26,7 +26,7 @@ print(f'loaded {num_users} users')
 base_output_dir = r"/home/user/6GTandem_RT_server/dataset/sub_thz_channels"#todo load from yaml
 
 # compression for channel data
-encoding = {d
+encoding = {
     "channel": dict(zlib=True, complevel=5)
 }
 
