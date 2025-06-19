@@ -1,5 +1,6 @@
 import numpy as np
 import yaml
+import os
 
 # define callbacks to set conductivity and relative permittivity based on ITUF materials from hexa-x
 def ituf_glass_callback(f_hz):
@@ -41,3 +42,16 @@ def load_config(path='/home/user/6GTandem_RT_server/src/config.yaml'):
     with open(path, 'r') as file:
         config = yaml.safe_load(file)
     return config
+
+def create_folder(folder_path):
+    """
+    Creates a folder at the specified path if it doesn't already exist.
+
+    Parameters:
+    folder_path (str): The path to the folder to create.
+    """
+    if not os.path.exists(folder_path):
+        os.makedirs(folder_path)
+        print(f"Folder created: {folder_path}")
+    else:
+        print(f"Folder already exists: {folder_path}")

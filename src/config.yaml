@@ -18,11 +18,12 @@ subTHz_config:
 sub10GHz_config:
   fc:  3.5e+9 
   bw:  100e+6 
-  num_subcarriers: 1024 # todo change to decent number
+  num_subcarriers: 1024 # todo change to decent number t
+
 
 ue_locations_config:
-  num_locations_zone1: 1 #other locations are computed based on area
-
+  num_locations_zone1: 3000 #other locations are computed based on area
+ # total number will be ~ num_locations_zone1 * 1.712 + N_RUs*N_stripes
 paths:
   basepath: "/home/user/6GTandem_RT_server"
   scenepath: "/home/user/6GTandem_RT_server/6G_Tandem_kantoorruimte_v10/office_space.xml"
