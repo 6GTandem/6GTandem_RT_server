@@ -1,12 +1,12 @@
 stripe_config: 
   N_RUs: 42 #per stripe
   N_stripes: 13
-  space_between_RUs: 0.5
-  space_between_stripes: 0.5
+  space_between_RUs: 0.5 #m
+  space_between_stripes: 0.5 #m
   stripe_start_pos: [2, 2.5, 3.5] #x,y,z
 
 antenna_config: 
-  N_antennas_per_axis: 2
+  N_antennas_per_axis: 2 #2 x 2 array
   pattern: 'iso'
   polarization: 'cross'
 
@@ -17,12 +17,17 @@ subTHz_config:
 
 sub10GHz_config:
   fc:  3.5e+9 
-  bw:  100e+6 
-  num_subcarriers: 1024 # todo change to decent number t
+  bw:  20.0e+6 
+  num_subcarriers: 1024 
+  num_APs : 4 # number of APs in the scene
+  ap_pos_ceil_1: [5.25, 7.25, 3.5] # xyz
+  ap_pos_ceil_2: [5.25, 18.25, 3.5] # xyz
+  ap_pos_wall_1: [2, 13, 2.5] # xyz
+  ap_pos_wall_2: [5.25, 23.5, 2.5] # xyz
 
 
 ue_locations_config:
-  num_locations_zone1: 3000 #other locations are computed based on area
+  num_locations_zone1: 3000 #3000 #other locations are computed based on area
  # total number will be ~ num_locations_zone1 * 1.712 + N_RUs*N_stripes
 paths:
   basepath: "/home/user/6GTandem_RT_server"

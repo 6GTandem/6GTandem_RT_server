@@ -5,3 +5,5 @@ ue_locations/
 datasets/
 dataset*/
 *.png
+*.log
+*.out
