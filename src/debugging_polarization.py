@@ -122,7 +122,7 @@ if __name__ == "__main__":
     ds_users, dataset_path = create_user_location_dataset(config, logger)
 
     # set output path
-    channel_output_path = os.path.join(dataset_path, 'sub_thz_channels')
+    channel_output_path = os.path.join(r'/home/user/6GTandem_RT_server/debugging', 'sub_thz_channels')
     create_folder(channel_output_path)
 
     # load params from config file
@@ -213,6 +213,8 @@ if __name__ == "__main__":
         
         # Point the receiver upwards
         rx.look_at([ue_pos[0], ue_pos[1], 3.5]) # Receiver points upwards
+        scene.rx_array.show()
+
 
         # check orientation
         #print(f'rx orientation: {rx.orientation}')
