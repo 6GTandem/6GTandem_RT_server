@@ -1,0 +1,1112 @@
+<scene version="2.1.0">
+
+<!-- Defaults, these can be set via the command line: -Darg=value -->
+
+	<default name="spp" value="576"/>
+	<default name="resx" value="1920"/>
+	<default name="resy" value="1080"/>
+
+<!-- Camera and Rendering Parameters -->
+
+	<integrator type="path" id="elm__0" name="elm__0">
+		<integer name="max_depth" value="12"/>
+	</integrator>
+	<sensor type="perspective" id="Camera.007" name="Camera.007">
+		<string name="fov_axis" value="x"/>
+		<float name="fov" value="39.597755"/>
+		<float name="principal_point_offset_x" value="0.000000"/>
+		<float name="principal_point_offset_y" value="-0.000000"/>
+		<float name="near_clip" value="0.100000"/>
+		<float name="far_clip" value="1000.000000"/>
+		<transform name="to_world">
+			<rotate x="1" angle="99.61016062895615"/>
+			<rotate y="1" angle="-43.11815436230634"/>
+			<rotate z="1" angle="162.89262144012216"/>
+			<translate value="11.335092 30.587437 2.167253"/>
+		</transform>
+		<sampler type="independent" name="sampler">
+			<integer name="sample_count" value="$spp"/>
+		</sampler>
+		<film type="hdrfilm" name="film">
+			<integer name="width" value="$resx"/>
+			<integer name="height" value="$resy"/>
+		</film>
+	</sensor>
+
+<!-- Materials -->
+
+	<bsdf type="twosided" id="mat-ituf_concrete" name="mat-ituf_concrete">
+		<bsdf type="principled" name="bsdf">
+			<rgb value="0.185905 0.173517 0.164064" name="base_color"/>
+			<rgb value="1.000000 1.000000 1.000000" name="spec_tint"/>
+			<float name="spec_trans" value="0.000000"/>
+			<float name="metallic" value="0.000000"/>
+			<float name="anisotropic" value="0.000000"/>
+			<float name="roughness" value="0.250000"/>
+			<float name="sheen" value="0.000000"/>
+			<rgb value="1.000000 1.000000 1.000000" name="sheen_tint"/>
+			<float name="clearcoat" value="0.000000"/>
+			<float name="clearcoat_gloss" value="0.000900"/>
+			<float name="specular" value="0.500000"/>
+		</bsdf>
+	</bsdf>
+	<bsdf type="twosided" id="mat-ituf_mdf" name="mat-ituf_mdf">
+		<bsdf type="principled" name="bsdf">
+			<rgb value="0.800955 0.293522 0.101689" name="base_color"/>
+			<rgb value="1.000000 1.000000 1.000000" name="spec_tint"/>
+			<float name="spec_trans" value="0.000000"/>
+			<float name="metallic" value="0.000000"/>
+			<float name="anisotropic" value="0.000000"/>
+			<float name="roughness" value="0.250000"/>
+			<float name="sheen" value="0.000000"/>
+			<rgb value="1.000000 1.000000 1.000000" name="sheen_tint"/>
+			<float name="clearcoat" value="0.000000"/>
+			<float name="clearcoat_gloss" value="0.000900"/>
+			<float name="specular" value="0.500000"/>
+		</bsdf>
+	</bsdf>
+	<bsdf type="twosided" id="mat-ituf_metal" name="mat-ituf_metal">
+		<bsdf type="principled" name="bsdf">
+			<rgb value="0.075130 0.075130 0.075130" name="base_color"/>
+			<rgb value="1.000000 1.000000 1.000000" name="spec_tint"/>
+			<float name="spec_trans" value="0.000000"/>
+			<float name="metallic" value="0.000000"/>
+			<float name="anisotropic" value="0.000000"/>
+			<float name="roughness" value="0.250000"/>
+			<float name="sheen" value="0.000000"/>
+			<rgb value="1.000000 1.000000 1.000000" name="sheen_tint"/>
+			<float name="clearcoat" value="0.000000"/>
+			<float name="clearcoat_gloss" value="0.000900"/>
+			<float name="specular" value="0.500000"/>
+		</bsdf>
+	</bsdf>
+	<bsdf type="twosided" id="mat-ituf_glass" name="mat-ituf_glass">
+		<bsdf type="principled" name="bsdf">
+			<rgb value="0.035959 0.000000 1.000000" name="base_color"/>
+			<rgb value="1.000000 1.000000 1.000000" name="spec_tint"/>
+			<float name="spec_trans" value="0.000000"/>
+			<float name="metallic" value="0.000000"/>
+			<float name="anisotropic" value="0.000000"/>
+			<float name="roughness" value="0.250000"/>
+			<float name="sheen" value="0.000000"/>
+			<rgb value="1.000000 1.000000 1.000000" name="sheen_tint"/>
+			<float name="clearcoat" value="0.000000"/>
+			<float name="clearcoat_gloss" value="0.000900"/>
+			<float name="specular" value="0.500000"/>
+		</bsdf>
+	</bsdf>
+	<bsdf type="twosided" id="mat-ituf_polystyrene" name="mat-ituf_polystyrene">
+		<bsdf type="principled" name="bsdf">
+			<rgb value="0.800000 0.800000 0.800000" name="base_color"/>
+			<rgb value="1.000000 1.000000 1.000000" name="spec_tint"/>
+			<float name="spec_trans" value="0.000000"/>
+			<float name="metallic" value="0.000000"/>
+			<float name="anisotropic" value="0.000000"/>
+			<float name="roughness" value="0.250000"/>
+			<float name="sheen" value="0.000000"/>
+			<rgb value="1.000000 1.000000 1.000000" name="sheen_tint"/>
+			<float name="clearcoat" value="0.000000"/>
+			<float name="clearcoat_gloss" value="0.000900"/>
+			<float name="specular" value="0.500000"/>
+		</bsdf>
+	</bsdf>
+
+<!-- Emitters -->
+
+
+<!-- Shapes -->
+
+	<shape type="ply" id="mesh-Wall" name="mesh-Wall">
+		<string name="filename" value="meshes/Wall.ply"/>
+		<boolean name="face_normals" value="true"/>
+		<ref id="mat-ituf_concrete" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Door_210x100_002" name="mesh-Door_210x100_002">
+		<string name="filename" value="meshes/Door_210x100_002.ply"/>
+		<ref id="mat-ituf_mdf" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Door_210x100_001" name="mesh-Door_210x100_001">
+		<string name="filename" value="meshes/Door_210x100_001.ply"/>
+		<ref id="mat-ituf_mdf" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Door_210x100" name="mesh-Door_210x100">
+		<string name="filename" value="meshes/Door_210x100.ply"/>
+		<ref id="mat-ituf_mdf" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Wall_001" name="mesh-Wall_001">
+		<string name="filename" value="meshes/Wall_001.ply"/>
+		<boolean name="face_normals" value="true"/>
+		<ref id="mat-ituf_concrete" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Window3_4x3_5_001_007" name="mesh-Window3_4x3_5_001_007">
+		<string name="filename" value="meshes/Window3_4x3_5_001_007.ply"/>
+		<ref id="mat-ituf_metal" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Floor_Ventilation_100x10_003" name="mesh-Floor_Ventilation_100x10_003">
+		<string name="filename" value="meshes/Floor_Ventilation_100x10_003.ply"/>
+		<ref id="mat-ituf_metal" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-WindowCover" name="mesh-WindowCover">
+		<string name="filename" value="meshes/WindowCover.ply"/>
+		<boolean name="face_normals" value="true"/>
+		<ref id="mat-ituf_concrete" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Floor" name="mesh-Floor">
+		<string name="filename" value="meshes/Floor.ply"/>
+		<boolean name="face_normals" value="true"/>
+		<ref id="mat-ituf_concrete" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Floor_Ventilation_100x10" name="mesh-Floor_Ventilation_100x10">
+		<string name="filename" value="meshes/Floor_Ventilation_100x10.ply"/>
+		<ref id="mat-ituf_metal" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Window3_4x3_5_001" name="mesh-Window3_4x3_5_001">
+		<string name="filename" value="meshes/Window3_4x3_5_001.ply"/>
+		<ref id="mat-ituf_glass" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Pillars" name="mesh-Pillars">
+		<string name="filename" value="meshes/Pillars.ply"/>
+		<boolean name="face_normals" value="true"/>
+		<ref id="mat-ituf_concrete" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Window3_4x3_5_001_001" name="mesh-Window3_4x3_5_001_001">
+		<string name="filename" value="meshes/Window3_4x3_5_001_001.ply"/>
+		<ref id="mat-ituf_glass" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Window3_4x3_5_001_002" name="mesh-Window3_4x3_5_001_002">
+		<string name="filename" value="meshes/Window3_4x3_5_001_002.ply"/>
+		<ref id="mat-ituf_glass" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Window3_4x3_5_001_003" name="mesh-Window3_4x3_5_001_003">
+		<string name="filename" value="meshes/Window3_4x3_5_001_003.ply"/>
+		<ref id="mat-ituf_glass" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Window3_4x3_5_001_004" name="mesh-Window3_4x3_5_001_004">
+		<string name="filename" value="meshes/Window3_4x3_5_001_004.ply"/>
+		<ref id="mat-ituf_glass" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Window3_4x3_5_001_005" name="mesh-Window3_4x3_5_001_005">
+		<string name="filename" value="meshes/Window3_4x3_5_001_005.ply"/>
+		<ref id="mat-ituf_glass" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Window3_4x3_5_001_006" name="mesh-Window3_4x3_5_001_006">
+		<string name="filename" value="meshes/Window3_4x3_5_001_006.ply"/>
+		<ref id="mat-ituf_glass" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Window3_4x3_5_001_008" name="mesh-Window3_4x3_5_001_008">
+		<string name="filename" value="meshes/Window3_4x3_5_001_008.ply"/>
+		<ref id="mat-ituf_glass" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Vent1a_031" name="mesh-Vent1a_031">
+		<string name="filename" value="meshes/Vent1a_031.ply"/>
+		<ref id="mat-ituf_metal" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Vent1b_011" name="mesh-Vent1b_011">
+		<string name="filename" value="meshes/Vent1b_011.ply"/>
+		<ref id="mat-ituf_metal" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Vent1b_010" name="mesh-Vent1b_010">
+		<string name="filename" value="meshes/Vent1b_010.ply"/>
+		<ref id="mat-ituf_metal" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Vent1a_030" name="mesh-Vent1a_030">
+		<string name="filename" value="meshes/Vent1a_030.ply"/>
+		<ref id="mat-ituf_metal" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Vent1a_029" name="mesh-Vent1a_029">
+		<string name="filename" value="meshes/Vent1a_029.ply"/>
+		<ref id="mat-ituf_metal" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Vent1b_009" name="mesh-Vent1b_009">
+		<string name="filename" value="meshes/Vent1b_009.ply"/>
+		<ref id="mat-ituf_metal" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Vent1a_028" name="mesh-Vent1a_028">
+		<string name="filename" value="meshes/Vent1a_028.ply"/>
+		<ref id="mat-ituf_metal" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Vent1b_008" name="mesh-Vent1b_008">
+		<string name="filename" value="meshes/Vent1b_008.ply"/>
+		<ref id="mat-ituf_metal" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Vent1a_008" name="mesh-Vent1a_008">
+		<string name="filename" value="meshes/Vent1a_008.ply"/>
+		<ref id="mat-ituf_metal" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Vent1a_007" name="mesh-Vent1a_007">
+		<string name="filename" value="meshes/Vent1a_007.ply"/>
+		<ref id="mat-ituf_metal" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Vent1a_027" name="mesh-Vent1a_027">
+		<string name="filename" value="meshes/Vent1a_027.ply"/>
+		<ref id="mat-ituf_metal" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Vent1a_026" name="mesh-Vent1a_026">
+		<string name="filename" value="meshes/Vent1a_026.ply"/>
+		<ref id="mat-ituf_metal" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Vent1b_000" name="mesh-Vent1b_000">
+		<string name="filename" value="meshes/Vent1b_000.ply"/>
+		<ref id="mat-ituf_metal" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Vent1a_025" name="mesh-Vent1a_025">
+		<string name="filename" value="meshes/Vent1a_025.ply"/>
+		<ref id="mat-ituf_metal" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Vent1a_024" name="mesh-Vent1a_024">
+		<string name="filename" value="meshes/Vent1a_024.ply"/>
+		<ref id="mat-ituf_metal" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Vent1a_023" name="mesh-Vent1a_023">
+		<string name="filename" value="meshes/Vent1a_023.ply"/>
+		<ref id="mat-ituf_metal" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Vent1a_022" name="mesh-Vent1a_022">
+		<string name="filename" value="meshes/Vent1a_022.ply"/>
+		<ref id="mat-ituf_metal" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Vent1a_021" name="mesh-Vent1a_021">
+		<string name="filename" value="meshes/Vent1a_021.ply"/>
+		<ref id="mat-ituf_metal" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Vent1a_020" name="mesh-Vent1a_020">
+		<string name="filename" value="meshes/Vent1a_020.ply"/>
+		<ref id="mat-ituf_metal" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Vent1a_010" name="mesh-Vent1a_010">
+		<string name="filename" value="meshes/Vent1a_010.ply"/>
+		<ref id="mat-ituf_metal" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Vent1b_007" name="mesh-Vent1b_007">
+		<string name="filename" value="meshes/Vent1b_007.ply"/>
+		<ref id="mat-ituf_metal" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Vent1b_006" name="mesh-Vent1b_006">
+		<string name="filename" value="meshes/Vent1b_006.ply"/>
+		<ref id="mat-ituf_metal" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Vent1a_019" name="mesh-Vent1a_019">
+		<string name="filename" value="meshes/Vent1a_019.ply"/>
+		<ref id="mat-ituf_metal" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Vent1b_005" name="mesh-Vent1b_005">
+		<string name="filename" value="meshes/Vent1b_005.ply"/>
+		<ref id="mat-ituf_metal" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Vent1a_018" name="mesh-Vent1a_018">
+		<string name="filename" value="meshes/Vent1a_018.ply"/>
+		<ref id="mat-ituf_metal" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Vent1b_004" name="mesh-Vent1b_004">
+		<string name="filename" value="meshes/Vent1b_004.ply"/>
+		<ref id="mat-ituf_metal" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Vent1b_003" name="mesh-Vent1b_003">
+		<string name="filename" value="meshes/Vent1b_003.ply"/>
+		<ref id="mat-ituf_metal" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Vent1a_017" name="mesh-Vent1a_017">
+		<string name="filename" value="meshes/Vent1a_017.ply"/>
+		<ref id="mat-ituf_metal" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Vent1a_016" name="mesh-Vent1a_016">
+		<string name="filename" value="meshes/Vent1a_016.ply"/>
+		<ref id="mat-ituf_metal" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Vent1a_015" name="mesh-Vent1a_015">
+		<string name="filename" value="meshes/Vent1a_015.ply"/>
+		<ref id="mat-ituf_metal" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Vent1a_014" name="mesh-Vent1a_014">
+		<string name="filename" value="meshes/Vent1a_014.ply"/>
+		<ref id="mat-ituf_metal" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Vent1a_013" name="mesh-Vent1a_013">
+		<string name="filename" value="meshes/Vent1a_013.ply"/>
+		<ref id="mat-ituf_metal" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Vent1a_012" name="mesh-Vent1a_012">
+		<string name="filename" value="meshes/Vent1a_012.ply"/>
+		<ref id="mat-ituf_metal" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Vent1a_011" name="mesh-Vent1a_011">
+		<string name="filename" value="meshes/Vent1a_011.ply"/>
+		<ref id="mat-ituf_metal" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Vent1a_009" name="mesh-Vent1a_009">
+		<string name="filename" value="meshes/Vent1a_009.ply"/>
+		<ref id="mat-ituf_metal" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Vent1a_006" name="mesh-Vent1a_006">
+		<string name="filename" value="meshes/Vent1a_006.ply"/>
+		<ref id="mat-ituf_metal" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Vent1a_005" name="mesh-Vent1a_005">
+		<string name="filename" value="meshes/Vent1a_005.ply"/>
+		<ref id="mat-ituf_metal" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Vent1a_004" name="mesh-Vent1a_004">
+		<string name="filename" value="meshes/Vent1a_004.ply"/>
+		<ref id="mat-ituf_metal" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Vent1a_003" name="mesh-Vent1a_003">
+		<string name="filename" value="meshes/Vent1a_003.ply"/>
+		<ref id="mat-ituf_metal" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Vent1a_002" name="mesh-Vent1a_002">
+		<string name="filename" value="meshes/Vent1a_002.ply"/>
+		<ref id="mat-ituf_metal" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Vent1a_000" name="mesh-Vent1a_000">
+		<string name="filename" value="meshes/Vent1a_000.ply"/>
+		<ref id="mat-ituf_metal" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Vent1a_001" name="mesh-Vent1a_001">
+		<string name="filename" value="meshes/Vent1a_001.ply"/>
+		<ref id="mat-ituf_metal" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Vent1b_001" name="mesh-Vent1b_001">
+		<string name="filename" value="meshes/Vent1b_001.ply"/>
+		<ref id="mat-ituf_metal" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Vent1b_002" name="mesh-Vent1b_002">
+		<string name="filename" value="meshes/Vent1b_002.ply"/>
+		<ref id="mat-ituf_metal" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Ceiling_Detail" name="mesh-Ceiling_Detail">
+		<string name="filename" value="meshes/Ceiling_Detail.ply"/>
+		<ref id="mat-ituf_polystyrene" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Ceiling" name="mesh-Ceiling">
+		<string name="filename" value="meshes/Ceiling.ply"/>
+		<boolean name="face_normals" value="true"/>
+		<ref id="mat-ituf_concrete" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Wardrobe_200x160x60_042" name="mesh-Wardrobe_200x160x60_042">
+		<string name="filename" value="meshes/Wardrobe_200x160x60_042.ply"/>
+		<ref id="mat-ituf_metal" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Wardrobe_200x160x60_041" name="mesh-Wardrobe_200x160x60_041">
+		<string name="filename" value="meshes/Wardrobe_200x160x60_041.ply"/>
+		<ref id="mat-ituf_metal" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Desk_1_160x80x75" name="mesh-Desk_1_160x80x75">
+		<string name="filename" value="meshes/Desk_1_160x80x75.ply"/>
+		<ref id="mat-ituf_mdf" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Wardrobe_200x160x60_040" name="mesh-Wardrobe_200x160x60_040">
+		<string name="filename" value="meshes/Wardrobe_200x160x60_040.ply"/>
+		<ref id="mat-ituf_metal" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Wardrobe_200x160x60_039" name="mesh-Wardrobe_200x160x60_039">
+		<string name="filename" value="meshes/Wardrobe_200x160x60_039.ply"/>
+		<ref id="mat-ituf_metal" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Wardrobe_200x160x60_038" name="mesh-Wardrobe_200x160x60_038">
+		<string name="filename" value="meshes/Wardrobe_200x160x60_038.ply"/>
+		<ref id="mat-ituf_metal" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Wardrobe_200x160x60_037" name="mesh-Wardrobe_200x160x60_037">
+		<string name="filename" value="meshes/Wardrobe_200x160x60_037.ply"/>
+		<ref id="mat-ituf_metal" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Wardrobe_200x160x60_036" name="mesh-Wardrobe_200x160x60_036">
+		<string name="filename" value="meshes/Wardrobe_200x160x60_036.ply"/>
+		<ref id="mat-ituf_metal" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Wardrobe_200x160x60_035" name="mesh-Wardrobe_200x160x60_035">
+		<string name="filename" value="meshes/Wardrobe_200x160x60_035.ply"/>
+		<ref id="mat-ituf_metal" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Wardrobe_200x160x60_034" name="mesh-Wardrobe_200x160x60_034">
+		<string name="filename" value="meshes/Wardrobe_200x160x60_034.ply"/>
+		<ref id="mat-ituf_metal" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Wardrobe_200x160x60_033" name="mesh-Wardrobe_200x160x60_033">
+		<string name="filename" value="meshes/Wardrobe_200x160x60_033.ply"/>
+		<ref id="mat-ituf_metal" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Wardrobe_200x160x60_032" name="mesh-Wardrobe_200x160x60_032">
+		<string name="filename" value="meshes/Wardrobe_200x160x60_032.ply"/>
+		<ref id="mat-ituf_metal" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Wardrobe_200x160x60_031" name="mesh-Wardrobe_200x160x60_031">
+		<string name="filename" value="meshes/Wardrobe_200x160x60_031.ply"/>
+		<ref id="mat-ituf_metal" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Wardrobe_200x160x60_030" name="mesh-Wardrobe_200x160x60_030">
+		<string name="filename" value="meshes/Wardrobe_200x160x60_030.ply"/>
+		<ref id="mat-ituf_metal" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Wardrobe_200x160x60_029" name="mesh-Wardrobe_200x160x60_029">
+		<string name="filename" value="meshes/Wardrobe_200x160x60_029.ply"/>
+		<ref id="mat-ituf_metal" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Wardrobe_200x160x60_028" name="mesh-Wardrobe_200x160x60_028">
+		<string name="filename" value="meshes/Wardrobe_200x160x60_028.ply"/>
+		<ref id="mat-ituf_metal" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Wardrobe_200x160x60_027" name="mesh-Wardrobe_200x160x60_027">
+		<string name="filename" value="meshes/Wardrobe_200x160x60_027.ply"/>
+		<ref id="mat-ituf_metal" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Wardrobe_200x160x60_026" name="mesh-Wardrobe_200x160x60_026">
+		<string name="filename" value="meshes/Wardrobe_200x160x60_026.ply"/>
+		<ref id="mat-ituf_metal" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Wardrobe_200x160x60_025" name="mesh-Wardrobe_200x160x60_025">
+		<string name="filename" value="meshes/Wardrobe_200x160x60_025.ply"/>
+		<ref id="mat-ituf_metal" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Wardrobe_200x160x60_024" name="mesh-Wardrobe_200x160x60_024">
+		<string name="filename" value="meshes/Wardrobe_200x160x60_024.ply"/>
+		<ref id="mat-ituf_metal" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Wardrobe_200x160x60_023" name="mesh-Wardrobe_200x160x60_023">
+		<string name="filename" value="meshes/Wardrobe_200x160x60_023.ply"/>
+		<ref id="mat-ituf_metal" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Wardrobe_200x160x60_022" name="mesh-Wardrobe_200x160x60_022">
+		<string name="filename" value="meshes/Wardrobe_200x160x60_022.ply"/>
+		<ref id="mat-ituf_metal" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Wardrobe_200x160x60_021" name="mesh-Wardrobe_200x160x60_021">
+		<string name="filename" value="meshes/Wardrobe_200x160x60_021.ply"/>
+		<ref id="mat-ituf_metal" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Wardrobe_200x160x60_020" name="mesh-Wardrobe_200x160x60_020">
+		<string name="filename" value="meshes/Wardrobe_200x160x60_020.ply"/>
+		<ref id="mat-ituf_metal" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Wardrobe_200x160x60_019" name="mesh-Wardrobe_200x160x60_019">
+		<string name="filename" value="meshes/Wardrobe_200x160x60_019.ply"/>
+		<ref id="mat-ituf_metal" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Wardrobe_200x160x60_018" name="mesh-Wardrobe_200x160x60_018">
+		<string name="filename" value="meshes/Wardrobe_200x160x60_018.ply"/>
+		<ref id="mat-ituf_metal" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Desk_80x80x75" name="mesh-Desk_80x80x75">
+		<string name="filename" value="meshes/Desk_80x80x75.ply"/>
+		<ref id="mat-ituf_mdf" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Bookstand_200x160x60_010" name="mesh-Bookstand_200x160x60_010">
+		<string name="filename" value="meshes/Bookstand_200x160x60_010.ply"/>
+		<ref id="mat-ituf_mdf" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Bookstand_200x160x60_009" name="mesh-Bookstand_200x160x60_009">
+		<string name="filename" value="meshes/Bookstand_200x160x60_009.ply"/>
+		<ref id="mat-ituf_mdf" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Bookstand_200x160x60_007" name="mesh-Bookstand_200x160x60_007">
+		<string name="filename" value="meshes/Bookstand_200x160x60_007.ply"/>
+		<ref id="mat-ituf_mdf" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Bookstand_200x160x60_006" name="mesh-Bookstand_200x160x60_006">
+		<string name="filename" value="meshes/Bookstand_200x160x60_006.ply"/>
+		<ref id="mat-ituf_mdf" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Bookstand_200x160x60_005" name="mesh-Bookstand_200x160x60_005">
+		<string name="filename" value="meshes/Bookstand_200x160x60_005.ply"/>
+		<ref id="mat-ituf_mdf" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Wardrobe_200x160x60_017" name="mesh-Wardrobe_200x160x60_017">
+		<string name="filename" value="meshes/Wardrobe_200x160x60_017.ply"/>
+		<ref id="mat-ituf_metal" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Wardrobe_200x160x60_016" name="mesh-Wardrobe_200x160x60_016">
+		<string name="filename" value="meshes/Wardrobe_200x160x60_016.ply"/>
+		<ref id="mat-ituf_metal" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Wardrobe_200x160x60_015" name="mesh-Wardrobe_200x160x60_015">
+		<string name="filename" value="meshes/Wardrobe_200x160x60_015.ply"/>
+		<ref id="mat-ituf_metal" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Wardrobe_200x160x60_014" name="mesh-Wardrobe_200x160x60_014">
+		<string name="filename" value="meshes/Wardrobe_200x160x60_014.ply"/>
+		<ref id="mat-ituf_metal" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Wardrobe_200x160x60_013" name="mesh-Wardrobe_200x160x60_013">
+		<string name="filename" value="meshes/Wardrobe_200x160x60_013.ply"/>
+		<ref id="mat-ituf_metal" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Wardrobe_200x160x60_012" name="mesh-Wardrobe_200x160x60_012">
+		<string name="filename" value="meshes/Wardrobe_200x160x60_012.ply"/>
+		<ref id="mat-ituf_metal" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Bookstand_200x160x60_004" name="mesh-Bookstand_200x160x60_004">
+		<string name="filename" value="meshes/Bookstand_200x160x60_004.ply"/>
+		<ref id="mat-ituf_mdf" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Wardrobe_200x160x60_011" name="mesh-Wardrobe_200x160x60_011">
+		<string name="filename" value="meshes/Wardrobe_200x160x60_011.ply"/>
+		<ref id="mat-ituf_metal" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Wardrobe_200x160x60_010" name="mesh-Wardrobe_200x160x60_010">
+		<string name="filename" value="meshes/Wardrobe_200x160x60_010.ply"/>
+		<ref id="mat-ituf_metal" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Wardrobe_200x160x60_009" name="mesh-Wardrobe_200x160x60_009">
+		<string name="filename" value="meshes/Wardrobe_200x160x60_009.ply"/>
+		<ref id="mat-ituf_metal" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Wardrobe_200x160x60_008" name="mesh-Wardrobe_200x160x60_008">
+		<string name="filename" value="meshes/Wardrobe_200x160x60_008.ply"/>
+		<ref id="mat-ituf_metal" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Bookstand_200x160x60_003" name="mesh-Bookstand_200x160x60_003">
+		<string name="filename" value="meshes/Bookstand_200x160x60_003.ply"/>
+		<ref id="mat-ituf_mdf" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Bookstand_200x160x60_002" name="mesh-Bookstand_200x160x60_002">
+		<string name="filename" value="meshes/Bookstand_200x160x60_002.ply"/>
+		<ref id="mat-ituf_mdf" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Wardrobe_200x160x60_007" name="mesh-Wardrobe_200x160x60_007">
+		<string name="filename" value="meshes/Wardrobe_200x160x60_007.ply"/>
+		<ref id="mat-ituf_metal" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Wardrobe_200x160x60_006" name="mesh-Wardrobe_200x160x60_006">
+		<string name="filename" value="meshes/Wardrobe_200x160x60_006.ply"/>
+		<ref id="mat-ituf_metal" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Wardrobe_200x160x60_005" name="mesh-Wardrobe_200x160x60_005">
+		<string name="filename" value="meshes/Wardrobe_200x160x60_005.ply"/>
+		<ref id="mat-ituf_metal" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Wardrobe_200x160x60_002" name="mesh-Wardrobe_200x160x60_002">
+		<string name="filename" value="meshes/Wardrobe_200x160x60_002.ply"/>
+		<ref id="mat-ituf_metal" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Bookstand_200x160x60_001" name="mesh-Bookstand_200x160x60_001">
+		<string name="filename" value="meshes/Bookstand_200x160x60_001.ply"/>
+		<ref id="mat-ituf_mdf" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Standcontainer_42x80x75_004" name="mesh-Standcontainer_42x80x75_004">
+		<string name="filename" value="meshes/Standcontainer_42x80x75_004.ply"/>
+		<ref id="mat-ituf_metal" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Standcontainer_42x80x75_005" name="mesh-Standcontainer_42x80x75_005">
+		<string name="filename" value="meshes/Standcontainer_42x80x75_005.ply"/>
+		<ref id="mat-ituf_metal" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Desk_3_160x80x75_002" name="mesh-Desk_3_160x80x75_002">
+		<string name="filename" value="meshes/Desk_3_160x80x75_002.ply"/>
+		<ref id="mat-ituf_mdf" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Desk_2_160x80x75_002" name="mesh-Desk_2_160x80x75_002">
+		<string name="filename" value="meshes/Desk_2_160x80x75_002.ply"/>
+		<ref id="mat-ituf_mdf" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Standcontainer_42x80x75_006" name="mesh-Standcontainer_42x80x75_006">
+		<string name="filename" value="meshes/Standcontainer_42x80x75_006.ply"/>
+		<ref id="mat-ituf_metal" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Standcontainer_42x80x75_007" name="mesh-Standcontainer_42x80x75_007">
+		<string name="filename" value="meshes/Standcontainer_42x80x75_007.ply"/>
+		<ref id="mat-ituf_metal" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Desk_2_160x80x75_003" name="mesh-Desk_2_160x80x75_003">
+		<string name="filename" value="meshes/Desk_2_160x80x75_003.ply"/>
+		<ref id="mat-ituf_mdf" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Desk_3_160x80x75_003" name="mesh-Desk_3_160x80x75_003">
+		<string name="filename" value="meshes/Desk_3_160x80x75_003.ply"/>
+		<ref id="mat-ituf_mdf" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Standcontainer_42x80x75_008" name="mesh-Standcontainer_42x80x75_008">
+		<string name="filename" value="meshes/Standcontainer_42x80x75_008.ply"/>
+		<ref id="mat-ituf_metal" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Standcontainer_42x80x75_009" name="mesh-Standcontainer_42x80x75_009">
+		<string name="filename" value="meshes/Standcontainer_42x80x75_009.ply"/>
+		<ref id="mat-ituf_metal" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Desk_3_160x80x75_004" name="mesh-Desk_3_160x80x75_004">
+		<string name="filename" value="meshes/Desk_3_160x80x75_004.ply"/>
+		<ref id="mat-ituf_mdf" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Desk_2_160x80x75_004" name="mesh-Desk_2_160x80x75_004">
+		<string name="filename" value="meshes/Desk_2_160x80x75_004.ply"/>
+		<ref id="mat-ituf_mdf" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Standcontainer_42x80x75_010" name="mesh-Standcontainer_42x80x75_010">
+		<string name="filename" value="meshes/Standcontainer_42x80x75_010.ply"/>
+		<ref id="mat-ituf_metal" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Standcontainer_42x80x75_011" name="mesh-Standcontainer_42x80x75_011">
+		<string name="filename" value="meshes/Standcontainer_42x80x75_011.ply"/>
+		<ref id="mat-ituf_metal" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Desk_2_160x80x75_005" name="mesh-Desk_2_160x80x75_005">
+		<string name="filename" value="meshes/Desk_2_160x80x75_005.ply"/>
+		<ref id="mat-ituf_mdf" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Desk_3_160x80x75_005" name="mesh-Desk_3_160x80x75_005">
+		<string name="filename" value="meshes/Desk_3_160x80x75_005.ply"/>
+		<ref id="mat-ituf_mdf" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Standcontainer_42x80x75_012" name="mesh-Standcontainer_42x80x75_012">
+		<string name="filename" value="meshes/Standcontainer_42x80x75_012.ply"/>
+		<ref id="mat-ituf_metal" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Standcontainer_42x80x75_013" name="mesh-Standcontainer_42x80x75_013">
+		<string name="filename" value="meshes/Standcontainer_42x80x75_013.ply"/>
+		<ref id="mat-ituf_metal" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Desk_3_160x80x75_006" name="mesh-Desk_3_160x80x75_006">
+		<string name="filename" value="meshes/Desk_3_160x80x75_006.ply"/>
+		<ref id="mat-ituf_mdf" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Desk_2_160x80x75_006" name="mesh-Desk_2_160x80x75_006">
+		<string name="filename" value="meshes/Desk_2_160x80x75_006.ply"/>
+		<ref id="mat-ituf_mdf" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Standcontainer_42x80x75_014" name="mesh-Standcontainer_42x80x75_014">
+		<string name="filename" value="meshes/Standcontainer_42x80x75_014.ply"/>
+		<ref id="mat-ituf_metal" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Standcontainer_42x80x75_015" name="mesh-Standcontainer_42x80x75_015">
+		<string name="filename" value="meshes/Standcontainer_42x80x75_015.ply"/>
+		<ref id="mat-ituf_metal" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Desk_2_160x80x75_007" name="mesh-Desk_2_160x80x75_007">
+		<string name="filename" value="meshes/Desk_2_160x80x75_007.ply"/>
+		<ref id="mat-ituf_mdf" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Desk_3_160x80x75_007" name="mesh-Desk_3_160x80x75_007">
+		<string name="filename" value="meshes/Desk_3_160x80x75_007.ply"/>
+		<ref id="mat-ituf_mdf" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Standcontainer_42x80x75_016" name="mesh-Standcontainer_42x80x75_016">
+		<string name="filename" value="meshes/Standcontainer_42x80x75_016.ply"/>
+		<ref id="mat-ituf_metal" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Standcontainer_42x80x75_017" name="mesh-Standcontainer_42x80x75_017">
+		<string name="filename" value="meshes/Standcontainer_42x80x75_017.ply"/>
+		<ref id="mat-ituf_metal" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Desk_3_160x80x75_008" name="mesh-Desk_3_160x80x75_008">
+		<string name="filename" value="meshes/Desk_3_160x80x75_008.ply"/>
+		<ref id="mat-ituf_mdf" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Desk_2_160x80x75_008" name="mesh-Desk_2_160x80x75_008">
+		<string name="filename" value="meshes/Desk_2_160x80x75_008.ply"/>
+		<ref id="mat-ituf_mdf" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Standcontainer_42x80x75_018" name="mesh-Standcontainer_42x80x75_018">
+		<string name="filename" value="meshes/Standcontainer_42x80x75_018.ply"/>
+		<ref id="mat-ituf_metal" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Standcontainer_42x80x75_019" name="mesh-Standcontainer_42x80x75_019">
+		<string name="filename" value="meshes/Standcontainer_42x80x75_019.ply"/>
+		<ref id="mat-ituf_metal" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Desk_2_160x80x75_009" name="mesh-Desk_2_160x80x75_009">
+		<string name="filename" value="meshes/Desk_2_160x80x75_009.ply"/>
+		<ref id="mat-ituf_mdf" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Desk_3_160x80x75_009" name="mesh-Desk_3_160x80x75_009">
+		<string name="filename" value="meshes/Desk_3_160x80x75_009.ply"/>
+		<ref id="mat-ituf_mdf" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Standcontainer_42x80x75_020" name="mesh-Standcontainer_42x80x75_020">
+		<string name="filename" value="meshes/Standcontainer_42x80x75_020.ply"/>
+		<ref id="mat-ituf_metal" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Standcontainer_42x80x75_021" name="mesh-Standcontainer_42x80x75_021">
+		<string name="filename" value="meshes/Standcontainer_42x80x75_021.ply"/>
+		<ref id="mat-ituf_metal" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Desk_3_160x80x75_010" name="mesh-Desk_3_160x80x75_010">
+		<string name="filename" value="meshes/Desk_3_160x80x75_010.ply"/>
+		<ref id="mat-ituf_mdf" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Desk_2_160x80x75_010" name="mesh-Desk_2_160x80x75_010">
+		<string name="filename" value="meshes/Desk_2_160x80x75_010.ply"/>
+		<ref id="mat-ituf_mdf" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Standcontainer_42x80x75_022" name="mesh-Standcontainer_42x80x75_022">
+		<string name="filename" value="meshes/Standcontainer_42x80x75_022.ply"/>
+		<ref id="mat-ituf_metal" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Standcontainer_42x80x75_023" name="mesh-Standcontainer_42x80x75_023">
+		<string name="filename" value="meshes/Standcontainer_42x80x75_023.ply"/>
+		<ref id="mat-ituf_metal" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Desk_2_160x80x75_011" name="mesh-Desk_2_160x80x75_011">
+		<string name="filename" value="meshes/Desk_2_160x80x75_011.ply"/>
+		<ref id="mat-ituf_mdf" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Desk_3_160x80x75_011" name="mesh-Desk_3_160x80x75_011">
+		<string name="filename" value="meshes/Desk_3_160x80x75_011.ply"/>
+		<ref id="mat-ituf_mdf" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Standcontainer_42x80x75_024" name="mesh-Standcontainer_42x80x75_024">
+		<string name="filename" value="meshes/Standcontainer_42x80x75_024.ply"/>
+		<ref id="mat-ituf_metal" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Standcontainer_42x80x75_025" name="mesh-Standcontainer_42x80x75_025">
+		<string name="filename" value="meshes/Standcontainer_42x80x75_025.ply"/>
+		<ref id="mat-ituf_metal" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Desk_3_160x80x75_012" name="mesh-Desk_3_160x80x75_012">
+		<string name="filename" value="meshes/Desk_3_160x80x75_012.ply"/>
+		<ref id="mat-ituf_mdf" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Desk_2_160x80x75_012" name="mesh-Desk_2_160x80x75_012">
+		<string name="filename" value="meshes/Desk_2_160x80x75_012.ply"/>
+		<ref id="mat-ituf_mdf" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Standcontainer_42x80x75_026" name="mesh-Standcontainer_42x80x75_026">
+		<string name="filename" value="meshes/Standcontainer_42x80x75_026.ply"/>
+		<ref id="mat-ituf_metal" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Standcontainer_42x80x75_027" name="mesh-Standcontainer_42x80x75_027">
+		<string name="filename" value="meshes/Standcontainer_42x80x75_027.ply"/>
+		<ref id="mat-ituf_metal" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Desk_2_160x80x75_013" name="mesh-Desk_2_160x80x75_013">
+		<string name="filename" value="meshes/Desk_2_160x80x75_013.ply"/>
+		<ref id="mat-ituf_mdf" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Desk_3_160x80x75_013" name="mesh-Desk_3_160x80x75_013">
+		<string name="filename" value="meshes/Desk_3_160x80x75_013.ply"/>
+		<ref id="mat-ituf_mdf" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Standcontainer_42x80x75_028" name="mesh-Standcontainer_42x80x75_028">
+		<string name="filename" value="meshes/Standcontainer_42x80x75_028.ply"/>
+		<ref id="mat-ituf_metal" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Standcontainer_42x80x75_029" name="mesh-Standcontainer_42x80x75_029">
+		<string name="filename" value="meshes/Standcontainer_42x80x75_029.ply"/>
+		<ref id="mat-ituf_metal" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Desk_3_160x80x75_014" name="mesh-Desk_3_160x80x75_014">
+		<string name="filename" value="meshes/Desk_3_160x80x75_014.ply"/>
+		<ref id="mat-ituf_mdf" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Desk_2_160x80x75_014" name="mesh-Desk_2_160x80x75_014">
+		<string name="filename" value="meshes/Desk_2_160x80x75_014.ply"/>
+		<ref id="mat-ituf_mdf" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Standcontainer_42x80x75_030" name="mesh-Standcontainer_42x80x75_030">
+		<string name="filename" value="meshes/Standcontainer_42x80x75_030.ply"/>
+		<ref id="mat-ituf_metal" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Standcontainer_42x80x75_031" name="mesh-Standcontainer_42x80x75_031">
+		<string name="filename" value="meshes/Standcontainer_42x80x75_031.ply"/>
+		<ref id="mat-ituf_metal" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Desk_2_160x80x75_015" name="mesh-Desk_2_160x80x75_015">
+		<string name="filename" value="meshes/Desk_2_160x80x75_015.ply"/>
+		<ref id="mat-ituf_mdf" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Desk_3_160x80x75_015" name="mesh-Desk_3_160x80x75_015">
+		<string name="filename" value="meshes/Desk_3_160x80x75_015.ply"/>
+		<ref id="mat-ituf_mdf" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Standcontainer_42x80x75_032" name="mesh-Standcontainer_42x80x75_032">
+		<string name="filename" value="meshes/Standcontainer_42x80x75_032.ply"/>
+		<ref id="mat-ituf_metal" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Standcontainer_42x80x75_033" name="mesh-Standcontainer_42x80x75_033">
+		<string name="filename" value="meshes/Standcontainer_42x80x75_033.ply"/>
+		<ref id="mat-ituf_metal" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Desk_3_160x80x75_016" name="mesh-Desk_3_160x80x75_016">
+		<string name="filename" value="meshes/Desk_3_160x80x75_016.ply"/>
+		<ref id="mat-ituf_mdf" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Desk_2_160x80x75_016" name="mesh-Desk_2_160x80x75_016">
+		<string name="filename" value="meshes/Desk_2_160x80x75_016.ply"/>
+		<ref id="mat-ituf_mdf" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Standcontainer_42x80x75_034" name="mesh-Standcontainer_42x80x75_034">
+		<string name="filename" value="meshes/Standcontainer_42x80x75_034.ply"/>
+		<ref id="mat-ituf_metal" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Standcontainer_42x80x75_035" name="mesh-Standcontainer_42x80x75_035">
+		<string name="filename" value="meshes/Standcontainer_42x80x75_035.ply"/>
+		<ref id="mat-ituf_metal" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Desk_2_160x80x75_017" name="mesh-Desk_2_160x80x75_017">
+		<string name="filename" value="meshes/Desk_2_160x80x75_017.ply"/>
+		<ref id="mat-ituf_mdf" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Desk_3_160x80x75_017" name="mesh-Desk_3_160x80x75_017">
+		<string name="filename" value="meshes/Desk_3_160x80x75_017.ply"/>
+		<ref id="mat-ituf_mdf" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Standcontainer_42x80x75_036" name="mesh-Standcontainer_42x80x75_036">
+		<string name="filename" value="meshes/Standcontainer_42x80x75_036.ply"/>
+		<ref id="mat-ituf_metal" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Standcontainer_42x80x75_037" name="mesh-Standcontainer_42x80x75_037">
+		<string name="filename" value="meshes/Standcontainer_42x80x75_037.ply"/>
+		<ref id="mat-ituf_metal" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Desk_3_160x80x75_018" name="mesh-Desk_3_160x80x75_018">
+		<string name="filename" value="meshes/Desk_3_160x80x75_018.ply"/>
+		<ref id="mat-ituf_mdf" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Desk_2_160x80x75_018" name="mesh-Desk_2_160x80x75_018">
+		<string name="filename" value="meshes/Desk_2_160x80x75_018.ply"/>
+		<ref id="mat-ituf_mdf" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Standcontainer_42x80x75_038" name="mesh-Standcontainer_42x80x75_038">
+		<string name="filename" value="meshes/Standcontainer_42x80x75_038.ply"/>
+		<ref id="mat-ituf_metal" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Standcontainer_42x80x75_039" name="mesh-Standcontainer_42x80x75_039">
+		<string name="filename" value="meshes/Standcontainer_42x80x75_039.ply"/>
+		<ref id="mat-ituf_metal" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Desk_2_160x80x75_019" name="mesh-Desk_2_160x80x75_019">
+		<string name="filename" value="meshes/Desk_2_160x80x75_019.ply"/>
+		<ref id="mat-ituf_mdf" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Desk_3_160x80x75_019" name="mesh-Desk_3_160x80x75_019">
+		<string name="filename" value="meshes/Desk_3_160x80x75_019.ply"/>
+		<ref id="mat-ituf_mdf" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Standcontainer_42x80x75_040" name="mesh-Standcontainer_42x80x75_040">
+		<string name="filename" value="meshes/Standcontainer_42x80x75_040.ply"/>
+		<ref id="mat-ituf_metal" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Standcontainer_42x80x75_041" name="mesh-Standcontainer_42x80x75_041">
+		<string name="filename" value="meshes/Standcontainer_42x80x75_041.ply"/>
+		<ref id="mat-ituf_metal" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Desk_3_160x80x75_020" name="mesh-Desk_3_160x80x75_020">
+		<string name="filename" value="meshes/Desk_3_160x80x75_020.ply"/>
+		<ref id="mat-ituf_mdf" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Desk_2_160x80x75_020" name="mesh-Desk_2_160x80x75_020">
+		<string name="filename" value="meshes/Desk_2_160x80x75_020.ply"/>
+		<ref id="mat-ituf_mdf" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Standcontainer_42x80x75_042" name="mesh-Standcontainer_42x80x75_042">
+		<string name="filename" value="meshes/Standcontainer_42x80x75_042.ply"/>
+		<ref id="mat-ituf_metal" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Standcontainer_42x80x75_043" name="mesh-Standcontainer_42x80x75_043">
+		<string name="filename" value="meshes/Standcontainer_42x80x75_043.ply"/>
+		<ref id="mat-ituf_metal" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Desk_2_160x80x75_021" name="mesh-Desk_2_160x80x75_021">
+		<string name="filename" value="meshes/Desk_2_160x80x75_021.ply"/>
+		<ref id="mat-ituf_mdf" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Desk_3_160x80x75_021" name="mesh-Desk_3_160x80x75_021">
+		<string name="filename" value="meshes/Desk_3_160x80x75_021.ply"/>
+		<ref id="mat-ituf_mdf" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Standcontainer_42x80x75_044" name="mesh-Standcontainer_42x80x75_044">
+		<string name="filename" value="meshes/Standcontainer_42x80x75_044.ply"/>
+		<ref id="mat-ituf_metal" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Standcontainer_42x80x75_045" name="mesh-Standcontainer_42x80x75_045">
+		<string name="filename" value="meshes/Standcontainer_42x80x75_045.ply"/>
+		<ref id="mat-ituf_metal" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Desk_3_160x80x75_022" name="mesh-Desk_3_160x80x75_022">
+		<string name="filename" value="meshes/Desk_3_160x80x75_022.ply"/>
+		<ref id="mat-ituf_mdf" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Desk_2_160x80x75_022" name="mesh-Desk_2_160x80x75_022">
+		<string name="filename" value="meshes/Desk_2_160x80x75_022.ply"/>
+		<ref id="mat-ituf_mdf" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Standcontainer_42x80x75_046" name="mesh-Standcontainer_42x80x75_046">
+		<string name="filename" value="meshes/Standcontainer_42x80x75_046.ply"/>
+		<ref id="mat-ituf_metal" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Standcontainer_42x80x75_047" name="mesh-Standcontainer_42x80x75_047">
+		<string name="filename" value="meshes/Standcontainer_42x80x75_047.ply"/>
+		<ref id="mat-ituf_metal" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Desk_2_160x80x75_023" name="mesh-Desk_2_160x80x75_023">
+		<string name="filename" value="meshes/Desk_2_160x80x75_023.ply"/>
+		<ref id="mat-ituf_mdf" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Desk_3_160x80x75_023" name="mesh-Desk_3_160x80x75_023">
+		<string name="filename" value="meshes/Desk_3_160x80x75_023.ply"/>
+		<ref id="mat-ituf_mdf" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Standcontainer_42x80x75_048" name="mesh-Standcontainer_42x80x75_048">
+		<string name="filename" value="meshes/Standcontainer_42x80x75_048.ply"/>
+		<ref id="mat-ituf_metal" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Standcontainer_42x80x75_049" name="mesh-Standcontainer_42x80x75_049">
+		<string name="filename" value="meshes/Standcontainer_42x80x75_049.ply"/>
+		<ref id="mat-ituf_metal" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Desk_3_160x80x75_024" name="mesh-Desk_3_160x80x75_024">
+		<string name="filename" value="meshes/Desk_3_160x80x75_024.ply"/>
+		<ref id="mat-ituf_mdf" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Desk_2_160x80x75_024" name="mesh-Desk_2_160x80x75_024">
+		<string name="filename" value="meshes/Desk_2_160x80x75_024.ply"/>
+		<ref id="mat-ituf_mdf" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Standcontainer_42x80x75_050" name="mesh-Standcontainer_42x80x75_050">
+		<string name="filename" value="meshes/Standcontainer_42x80x75_050.ply"/>
+		<ref id="mat-ituf_metal" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Standcontainer_42x80x75_051" name="mesh-Standcontainer_42x80x75_051">
+		<string name="filename" value="meshes/Standcontainer_42x80x75_051.ply"/>
+		<ref id="mat-ituf_metal" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Desk_2_160x80x75_025" name="mesh-Desk_2_160x80x75_025">
+		<string name="filename" value="meshes/Desk_2_160x80x75_025.ply"/>
+		<ref id="mat-ituf_mdf" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Desk_3_160x80x75_025" name="mesh-Desk_3_160x80x75_025">
+		<string name="filename" value="meshes/Desk_3_160x80x75_025.ply"/>
+		<ref id="mat-ituf_mdf" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Wardrobe_200x160x60_043" name="mesh-Wardrobe_200x160x60_043">
+		<string name="filename" value="meshes/Wardrobe_200x160x60_043.ply"/>
+		<ref id="mat-ituf_metal" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Wardrobe_200x160x60_044" name="mesh-Wardrobe_200x160x60_044">
+		<string name="filename" value="meshes/Wardrobe_200x160x60_044.ply"/>
+		<ref id="mat-ituf_metal" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Wardrobe_200x160x60_045" name="mesh-Wardrobe_200x160x60_045">
+		<string name="filename" value="meshes/Wardrobe_200x160x60_045.ply"/>
+		<ref id="mat-ituf_metal" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Wardrobe_200x160x60_046" name="mesh-Wardrobe_200x160x60_046">
+		<string name="filename" value="meshes/Wardrobe_200x160x60_046.ply"/>
+		<ref id="mat-ituf_metal" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Bookstand_200x160x60_008" name="mesh-Bookstand_200x160x60_008">
+		<string name="filename" value="meshes/Bookstand_200x160x60_008.ply"/>
+		<ref id="mat-ituf_mdf" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Wardrobe_200x160x60_047" name="mesh-Wardrobe_200x160x60_047">
+		<string name="filename" value="meshes/Wardrobe_200x160x60_047.ply"/>
+		<ref id="mat-ituf_metal" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Wardrobe_200x160x60_048" name="mesh-Wardrobe_200x160x60_048">
+		<string name="filename" value="meshes/Wardrobe_200x160x60_048.ply"/>
+		<ref id="mat-ituf_metal" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Wardrobe_200x160x60_049" name="mesh-Wardrobe_200x160x60_049">
+		<string name="filename" value="meshes/Wardrobe_200x160x60_049.ply"/>
+		<ref id="mat-ituf_metal" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Wardrobe_200x160x60_050" name="mesh-Wardrobe_200x160x60_050">
+		<string name="filename" value="meshes/Wardrobe_200x160x60_050.ply"/>
+		<ref id="mat-ituf_metal" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Bookstand_200x160x60_011" name="mesh-Bookstand_200x160x60_011">
+		<string name="filename" value="meshes/Bookstand_200x160x60_011.ply"/>
+		<ref id="mat-ituf_mdf" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Wardrobe_200x160x60_051" name="mesh-Wardrobe_200x160x60_051">
+		<string name="filename" value="meshes/Wardrobe_200x160x60_051.ply"/>
+		<ref id="mat-ituf_metal" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Wardrobe_200x160x60_052" name="mesh-Wardrobe_200x160x60_052">
+		<string name="filename" value="meshes/Wardrobe_200x160x60_052.ply"/>
+		<ref id="mat-ituf_metal" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Wardrobe_200x160x60_053" name="mesh-Wardrobe_200x160x60_053">
+		<string name="filename" value="meshes/Wardrobe_200x160x60_053.ply"/>
+		<ref id="mat-ituf_metal" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Wardrobe_200x160x60_054" name="mesh-Wardrobe_200x160x60_054">
+		<string name="filename" value="meshes/Wardrobe_200x160x60_054.ply"/>
+		<ref id="mat-ituf_metal" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Bookstand_200x160x60_012" name="mesh-Bookstand_200x160x60_012">
+		<string name="filename" value="meshes/Bookstand_200x160x60_012.ply"/>
+		<ref id="mat-ituf_mdf" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Wardrobe_200x160x60_055" name="mesh-Wardrobe_200x160x60_055">
+		<string name="filename" value="meshes/Wardrobe_200x160x60_055.ply"/>
+		<ref id="mat-ituf_metal" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Wardrobe_200x160x60_056" name="mesh-Wardrobe_200x160x60_056">
+		<string name="filename" value="meshes/Wardrobe_200x160x60_056.ply"/>
+		<ref id="mat-ituf_metal" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Wardrobe_200x160x60_057" name="mesh-Wardrobe_200x160x60_057">
+		<string name="filename" value="meshes/Wardrobe_200x160x60_057.ply"/>
+		<ref id="mat-ituf_metal" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Wardrobe_200x160x60_058" name="mesh-Wardrobe_200x160x60_058">
+		<string name="filename" value="meshes/Wardrobe_200x160x60_058.ply"/>
+		<ref id="mat-ituf_metal" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Bookstand_200x160x60_013" name="mesh-Bookstand_200x160x60_013">
+		<string name="filename" value="meshes/Bookstand_200x160x60_013.ply"/>
+		<ref id="mat-ituf_mdf" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Wardrobe_200x160x60_059" name="mesh-Wardrobe_200x160x60_059">
+		<string name="filename" value="meshes/Wardrobe_200x160x60_059.ply"/>
+		<ref id="mat-ituf_metal" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Wardrobe_200x160x60_060" name="mesh-Wardrobe_200x160x60_060">
+		<string name="filename" value="meshes/Wardrobe_200x160x60_060.ply"/>
+		<ref id="mat-ituf_metal" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Wardrobe_200x160x60_061" name="mesh-Wardrobe_200x160x60_061">
+		<string name="filename" value="meshes/Wardrobe_200x160x60_061.ply"/>
+		<ref id="mat-ituf_metal" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Wardrobe_200x160x60_062" name="mesh-Wardrobe_200x160x60_062">
+		<string name="filename" value="meshes/Wardrobe_200x160x60_062.ply"/>
+		<ref id="mat-ituf_metal" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Bookstand_200x160x60_014" name="mesh-Bookstand_200x160x60_014">
+		<string name="filename" value="meshes/Bookstand_200x160x60_014.ply"/>
+		<ref id="mat-ituf_mdf" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Wardrobe_200x160x60_063" name="mesh-Wardrobe_200x160x60_063">
+		<string name="filename" value="meshes/Wardrobe_200x160x60_063.ply"/>
+		<ref id="mat-ituf_metal" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Wardrobe_200x160x60_064" name="mesh-Wardrobe_200x160x60_064">
+		<string name="filename" value="meshes/Wardrobe_200x160x60_064.ply"/>
+		<ref id="mat-ituf_metal" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Wardrobe_200x160x60_065" name="mesh-Wardrobe_200x160x60_065">
+		<string name="filename" value="meshes/Wardrobe_200x160x60_065.ply"/>
+		<ref id="mat-ituf_metal" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Wardrobe_200x160x60_066" name="mesh-Wardrobe_200x160x60_066">
+		<string name="filename" value="meshes/Wardrobe_200x160x60_066.ply"/>
+		<ref id="mat-ituf_metal" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Bookstand_200x160x60_015" name="mesh-Bookstand_200x160x60_015">
+		<string name="filename" value="meshes/Bookstand_200x160x60_015.ply"/>
+		<ref id="mat-ituf_mdf" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Wardrobe_200x160x60_067" name="mesh-Wardrobe_200x160x60_067">
+		<string name="filename" value="meshes/Wardrobe_200x160x60_067.ply"/>
+		<ref id="mat-ituf_metal" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Wardrobe_200x160x60_068" name="mesh-Wardrobe_200x160x60_068">
+		<string name="filename" value="meshes/Wardrobe_200x160x60_068.ply"/>
+		<ref id="mat-ituf_metal" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Wardrobe_200x160x60_069" name="mesh-Wardrobe_200x160x60_069">
+		<string name="filename" value="meshes/Wardrobe_200x160x60_069.ply"/>
+		<ref id="mat-ituf_metal" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Wardrobe_200x160x60_070" name="mesh-Wardrobe_200x160x60_070">
+		<string name="filename" value="meshes/Wardrobe_200x160x60_070.ply"/>
+		<ref id="mat-ituf_metal" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Bookstand_200x160x60_016" name="mesh-Bookstand_200x160x60_016">
+		<string name="filename" value="meshes/Bookstand_200x160x60_016.ply"/>
+		<ref id="mat-ituf_mdf" name="bsdf"/>
+	</shape>
+
+<!-- Volumes -->
+
+</scene>
