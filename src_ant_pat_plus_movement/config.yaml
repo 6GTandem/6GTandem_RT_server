@@ -1,19 +1,21 @@
 stripe_config: 
-  N_RUs: 20 #per stripe
-  N_stripes: 8
+  N_RUs: 5 #per stripe (20)
+  N_stripes: 1 #7
   space_between_RUs: 1 #m
   space_between_stripes: 1 #m
   stripe_start_pos: [2, 2.5, 3.5] #x,y,z
+  array_direction: 'x' # direction along which the antennas of the array are placed 'x' => perpendicular to stripe direction (y) note this argument is fixed! only 'x' is supported for now
 
 antenna_config: 
-  N_antennas_per_axis: 2 #2 x 2 array
-  pattern: 'iso' #todo
+  N_antennas: 4
+  pattern: 'measured'
   polarization: 'V'
 
 subTHz_config:
   fc:  157.75e+9 
-  bw:  12.5e+9 
-  num_subcarriers: 1024 #1024
+  bw:  6.0e+9 
+  num_subcarriers: 4096 #1024
+  doppler: False # todo add
 
 sub10GHz_config:
   fc:  3.5e+9 
@@ -27,11 +29,13 @@ sub10GHz_config:
 
 
 ue_locations_config:
-  num_locations_zone1: 3000 #3000 #other locations are computed based on area
+  num_locations_zone1: 2000 #3000 #other locations are computed based on area
  # total number will be ~ num_locations_zone1 * 1.712 + N_RUs*N_stripes
 paths:
   basepath: "/home/user/6GTandem_RT_server/datasets_mobility_rad_pat"
   scenepath: "/home/user/6GTandem_RT_server/6G_Tandem_kantoorruimte_v10/office_space.xml"
+  antenna_rad_path: "/home/user/6GTandem_RT_server/antenna_patterns"
+
 
 random_configs:
   intermediate_renders: False # intermediatelly render the scene

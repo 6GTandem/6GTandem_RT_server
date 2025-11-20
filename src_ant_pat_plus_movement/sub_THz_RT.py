@@ -6,14 +6,20 @@ import xarray as xr
 import numpy as np
 from tqdm import tqdm
 import os
+import pandas as pd
+from scipy.interpolate import RegularGridInterpolator
+from scipy.constants import speed_of_light
 from sionna.rt import load_scene, AntennaArray, PlanarArray, Transmitter, Receiver, Camera,\
-                      PathSolver, RadioMapSolver, subcarrier_frequencies
+                      PathSolver, RadioMapSolver, subcarrier_frequencies, AntennaPattern
 from utils import ituf_glass_callback, ituf_concrete_callback, ituf_metal_callback, \
                   ituf_polystyrene_callback, ituf_mdf_callback, load_config, create_folder
 from ue_locations_generator import create_user_location_dataset
 import logging
 import datetime
 import sys
+import mitsuba as mi
+import pynvml
+
 
 def setup():
     # check versions and set up GPU
@@ -33,6 +39,15 @@ def setup():
             logger.info(e)
     else:
         logger.info("No GPU found, using CPU.")
+    
+    # limit tf allocation growth
+    if gpus:
+        try:
+            for gpu in gpus:
+                tf.config.experimental.set_memory_growth(gpu, True)
+        except RuntimeError as e:
+            print(e)
+
 
 def set_materials(scene, config):
     # check which materials are available in the scene
@@ -90,8 +105,85 @@ def set_materials(scene, config):
             logger.info(f"Scattering coefficient: {value.radio_material.scattering_coefficient.numpy()}")
             logger.info(f"XPD coefficient: {value.radio_material.xpd_coefficient.numpy()}")
 
+""" custom patterns for sionna based on measurements """
+# antenna pattern based on measurements
+class MeasuredPattern(AntennaPattern):
+    """
+    Custom antenna pattern based on CSV data.
+    The CSV must contain columns:
+    'Phi[deg]', 'Theta[deg]', 'mag(rERHCP)[mV]', 'ang_deg(rERHCP)[deg]'
+    """
+
+    def __init__(self, csv_path, normalize=True):
+        super().__init__()
+
+        # ---- Load CSV ----
+        df = pd.read_csv(csv_path)
+        phi_deg = df["Phi[deg]"].values # degrees
+        theta_deg = df["Theta[deg]"].values # degrees
+        mag = df["mag(rERHCP)[mV]"].values/1000  # convert mV to V
+        #print(f'max mag in MeasuredPattern: {np.max(mag)*1000} mV')
+        ang_deg = df["ang_deg(rERHCP)[deg]"].values
+
+        # ---- Convert to radians and complex field ----
+        phi = np.deg2rad(phi_deg)
+        theta = np.deg2rad(theta_deg)
+        field = mag * np.exp(1j * np.deg2rad(ang_deg))
+
+        # Optional normalization (to make max field = 1)
+        if normalize:
+            field = field / np.max(np.abs(field))
+
+        # ---- Build regular grids for interpolation ----
+        # (assuming uniform or nearly-uniform sampling)
+        phi_unique = np.sort(np.unique(phi))
+        theta_unique = np.sort(np.unique(theta))
+
+        # reshape to 2D grid [len(theta), len(phi)]
+        n_theta = len(theta_unique)
+        n_phi = len(phi_unique)
+        field_grid = field.reshape(n_theta, n_phi)
+
+        # Interpolator over (theta, phi)
+        self._interp = RegularGridInterpolator(
+            (theta_unique, phi_unique),
+            field_grid,
+            bounds_error=False,
+            fill_value=1e-8
+        )
+
+    @property
+    def patterns(self):
+        def f(theta, phi):
+            # Convert TF tensors to numpy arrays for interpolation
+            theta_np = theta.numpy()
+            phi_np = phi.numpy()
+
+            # Stack and interpolate
+            pts = np.stack([theta_np, phi_np], axis=-1)
+            field_np = self._interp(pts)
+
+            # Convert back to TF complex tensor
+            field = tf.constant(field_np, dtype=tf.complex64)
+
+            field_np = np.asarray(field_np, dtype=np.complex64)
+            E_theta_np = field_np / np.sqrt(2)
+            E_phi_np = 1j * field_np / np.sqrt(2)
+
+            # Convert to Dr.Jit type
+            c_theta = mi.Complex2f(E_theta_np.real, E_theta_np.imag)
+            c_phi   = mi.Complex2f(E_phi_np.real, E_phi_np.imag)
+            return c_theta, c_phi
+
+        # Single polarization (RHCP)
+        return [f]
+
+
 
 if __name__ == "__main__":
+    # for gpu monitoring
+    pynvml.nvmlInit()
+    handle = pynvml.nvmlDeviceGetHandleByIndex(0)  # Use GPU 0, change index for other GPUs
 
     # Configure logging
     log_time = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
@@ -119,6 +211,22 @@ if __name__ == "__main__":
     # load config file
     config = load_config()
 
+    print(f'config loaded: {config}')
+
+    # register antenna patterns
+    antenna_path = config['paths']['antenna_rad_path']
+
+    # register all measured patterns
+    for i in range(1, 5):
+        path = os.path.join(antenna_path, f'element{i}.csv')
+
+        def measured_pattern_factory(csv_path=path, normalize=False, **kwargs):
+            """Factory method that returns an instance of the antenna pattern"""
+            return MeasuredPattern(csv_path=csv_path, normalize=normalize)
+
+        # Register it under a custom name
+        sionna.rt.register_antenna_pattern(f"custom_measured_element_{i}", measured_pattern_factory)
+
     # create or load user dataset
     ds_users, dataset_path = create_user_location_dataset(config, logger)
 
@@ -144,23 +252,24 @@ if __name__ == "__main__":
     set_materials(scene, config)
 
     # configure tx and rx arrays
-    N_antennas = config['antenna_config']['N_antennas_per_axis']
-    logger.info(f'number antennas per axis: {N_antennas}')
+    N_antennas = config['antenna_config']['N_antennas'] # 4x1 antennas
+    logger.info(f'number antennas: {N_antennas}')
 
-    scene.tx_array = PlanarArray(num_rows=N_antennas,
-                                num_cols=N_antennas,
-                                vertical_spacing=0.5,
-                                horizontal_spacing=0.5,
-                                pattern=config['antenna_config']['pattern'],
-                                polarization=config['antenna_config']['polarization'])
+    # # todo move this so we can change it per antenna 
+    # scene.tx_array = PlanarArray(num_rows=N_antennas,
+    #                             num_cols=N_antennas,
+    #                             vertical_spacing=0.5,
+    #                             horizontal_spacing=0.5,
+    #                             pattern=config['antenna_config']['pattern'],
+    #                             polarization=config['antenna_config']['polarization'])
 
-    # Configure antenna array for all receivers
-    scene.rx_array = PlanarArray(num_rows=N_antennas,
-                                num_cols=N_antennas,
-                                vertical_spacing=0.5,
-                                horizontal_spacing=0.5,
-                                pattern=config['antenna_config']['pattern'],
-                                polarization=config['antenna_config']['polarization'])
+    # # Configure antenna array for all receivers
+    # scene.rx_array = PlanarArray(num_rows=N_antennas,
+    #                             num_cols=N_antennas,
+    #                             vertical_spacing=0.5,
+    #                             horizontal_spacing=0.5,
+    #                             pattern=config['antenna_config']['pattern'],
+    #                             polarization=config['antenna_config']['polarization'])
 
 
     # sub-THz stripe specs 
@@ -183,7 +292,10 @@ if __name__ == "__main__":
 
     # set scene frequency
     scene.frequency = config['subTHz_config']['fc']# Set frequency to fc 
+    antenna_spacing = (speed_of_light / scene.frequency) / 2  # half wavelength spacing
     logger.info(f"scene frequency set to: {scene.frequency}")
+    logger.info(f"antenna spacing set to: {antenna_spacing} meters")
+
 
     # Instantiate a path solver
     # The same path solver can be used with multiple scenes
@@ -207,28 +319,29 @@ if __name__ == "__main__":
         x, y, z = ds_users.x.values[ue_idx], ds_users.y.values[ue_idx], ds_users.z.values[ue_idx]
         ue_pos = [float(x), float(y), float(z)]
 
-        # Create a receiver
-        rx = Receiver(name=f"rx_{ue_idx}",
-                    position=ue_pos,
-                    display_radius=0.5)
+        # # Create a receiver
+        # rx = Receiver(name=f"rx_{ue_idx}",
+        #             position=ue_pos,
+        #             display_radius=0.5)
         
-        # Point the receiver upwards
-        rx.look_at([ue_pos[0], ue_pos[1], 3.5]) # Receiver points upwards
+        # # Point the receiver upwards
+        # rx.look_at([ue_pos[0], ue_pos[1], 3.5]) # Receiver points upwards
 
-        # check orientation
-        #print(f'rx orientation: {rx.orientation}')
+        # # check orientation
+        # #print(f'rx orientation: {rx.orientation}')
 
-        # Add receiver instance to scene
-        scene.add(rx)
+        # # Add receiver instance to scene
+        # scene.add(rx)
 
-        # add velocity to the user #todo test
-        rx_velocity = [np.random.uniform(0, 3), np.random.uniform(0, 3), 0]
-        scene.get(f"rx_{ue_idx}").velocity = rx_velocity
-        logger.info(f"rx_{ue_idx} velocity: {scene.get(f'rx_{ue_idx}').velocity}")
+        # add velocity to the user 
+        if config['subTHz_config']['doppler']:
+            rx_velocity = [np.random.uniform(0, 3), np.random.uniform(0, 3), 0]
+            #scene.get(f"rx_{ue_idx}").velocity = rx_velocity
+            logger.info(f"rx_{ue_idx} velocity: {scene.get(f'rx_{ue_idx}').velocity}")
 
-        # Preallocate channel tensor and index arrays (2x N^2 because cross polarization)
+        # Preallocate channel tensor and index arrays 
         channel_tensor = np.empty(
-            (total_N_RUs, 2*N_antennas**2, 2*N_antennas**2, num_subcarriers),
+            (total_N_RUs, N_antennas, N_antennas, num_subcarriers),
             dtype=np.complex64
         )
         stripe_idx_arr = np.empty(total_N_RUs, dtype=np.int32)
@@ -239,45 +352,112 @@ if __name__ == "__main__":
         # start time current ue computation
         t_start_ue = time.time()
 
-        # loop over all stripes
-        for stripe_idx in range(N_stripes):
-            # start time 1 stripe computation
-            #t1 = time.time()
-            # log
-            #logger.info(f"Processing UE {ue_idx}/{ds_users.dims['user']} stripe {stripe_idx} ...")
-            # loop over all RUs 
-            for RU_idx in range(N_RUs):
-             
-                # compute RU position
-                tx_pos = [stripe_start_pos[0] + stripe_idx * space_between_stripses,
-                        stripe_start_pos[1] + RU_idx * space_between_RUs,
-                        stripe_start_pos[2]]
+        # to create lambda/2 spacing offset
+        start_offset = -((N_antennas - 1) / 2) * antenna_spacing
+
+        # loop over ue antenna elemenets
+        for ue_ant_idx in range(N_antennas):
+            # todo check if antenna pat changes each time!
+            # Configure antenna array for all receivers
+            scene.rx_array = PlanarArray(num_rows=1,
+                                        num_cols=1,
+                                        pattern=f"custom_measured_element_{ue_ant_idx+1}",
+                                        polarization=config['antenna_config']['polarization'])
+
+            # Create a receiver
+            antenna_spacing_offset = start_offset + (ue_ant_idx * antenna_spacing)
+            ue_pos_adjusted = np.array(ue_pos) # Copy the base position [x, y, z]
+            ue_pos_adjusted[0] += antenna_spacing_offset # Apply offset to the x-coordinate (for a ULA along X)
+            ue_pos_adjusted = ue_pos_adjusted.tolist()
+            #print(f'original ue pos: {ue_pos}, adjusted ue pos for ant idx {ue_ant_idx}: {ue_pos_adjusted} - antenna spacing: {antenna_spacing}')
+            rx = Receiver(name=f"rx_{ue_idx}",
+                        position=ue_pos_adjusted,
+                        display_radius=0.5)
+            
+            # Point the receiver upwards
+            rx.look_at([ue_pos_adjusted[0], ue_pos_adjusted[1], 3.5]) # Receiver points upwards
+
+            # check orientation
+            #print(f'rx orientation: {rx.orientation}')
+
+            # Add receiver instance to scene
+            scene.add(rx)
+
+            # if doppler is enabled, set velocity of the user
+            if config['subTHz_config']['doppler']:
+                scene.get(f"rx_{ue_idx}").velocity = rx_velocity
+
+            # loop over ru antenna elemenets
+            for ru_ant_idx in range(N_antennas):
+                # todo configure ru with antenna idx
+                scene.tx_array = PlanarArray(num_rows=1,
+                                            num_cols=1,
+                                            pattern=f"custom_measured_element_{ru_ant_idx+1}",
+                                            polarization=config['antenna_config']['polarization'])
                 
-                # Create RU transmitter instance
-                tx = Transmitter(name=f"tx_stripe_{stripe_idx}_RU_{RU_idx}",
-                            position=tx_pos,
-                            display_radius=0.1)
-
-                # Add RU transmitter instance to scene
-                scene.add(tx)
-
-                # Point the transmitter downwards
-                tx.look_at([tx_pos[0], tx_pos[1], 0]) # Transmitter points downwards
-
-                # check orientation
-                #print(f'tx orientation: {tx.orientation}')
-
-                # render scene with tx and rx
-                if intermediate_reders:
-                    logger.info(f' rendering scene prior to path solver')
-                    scene.render_to_file(camera=my_cam, filename=f'scene_with_stripe_{stripe_idx}_RU_{RU_idx}.png', 
-                                        resolution=[650, 500], num_samples=512, clip_at=20) 
 
 
+                # loop over all stripes
+                for stripe_idx in range(N_stripes):
+                    # start time 1 stripe computation
+                    #t1 = time.time()
+                    # log
+                    #logger.info(f"Processing UE {ue_idx}/{ds_users.dims['user']} stripe {stripe_idx} ...")
+                            # loop over all RUs 
+                    for RU_idx in range(N_RUs):
+                        
+                        # todo add lambda/2 offset for each antenna element
+                        # compute RU position
+                        tx_pos = [stripe_start_pos[0] + stripe_idx * space_between_stripses,
+                                stripe_start_pos[1] + RU_idx * space_between_RUs,
+                                stripe_start_pos[2]]
 
-                # todo recheck this
+                        antenna_spacing_offset_ru = start_offset + (ru_ant_idx * antenna_spacing)
+                        tx_pos_adjusted = np.array(tx_pos) # Copy the base position [x, y, z]
+                        tx_pos_adjusted[0] += antenna_spacing_offset # Apply offset to the x-coordinate (for a ULA along X)
+                        tx_pos_adjusted = tx_pos_adjusted.tolist()
+                        #print(f'original tx pos: {tx_pos}, adjusted tx pos for ant idx {ru_ant_idx}: {tx_pos_adjusted} - antenna spacing: {antenna_spacing}')
+
+                        
+                        # Create RU transmitter instance
+                        tx = Transmitter(name=f"tx_stripe_{stripe_idx}_RU_{RU_idx}",
+                                    position=tx_pos_adjusted,
+                                    display_radius=0.1)
+
+                        # Add RU transmitter instance to scene
+                        scene.add(tx)
+
+                        print(f'After adding tx_stripe_{stripe_idx}_RU_{RU_idx}:')
+                        info = pynvml.nvmlDeviceGetMemoryInfo(handle)
+                        print("Location A memory used (GB):", info.used / (2**30))
+
+                        # Point the transmitter downwards
+                        tx.look_at([tx_pos_adjusted[0], tx_pos_adjusted[1], 0]) # Transmitter points downwards
+
+                        # check orientation
+                        #print(f'tx orientation: {tx.orientation}')
+
+                        # render scene with tx and rx
+                        if intermediate_reders:
+                            logger.info(f' rendering scene prior to path solver')
+                            scene.render_to_file(camera=my_cam, filename=f'scene_with_stripe_{stripe_idx}_RU_{RU_idx}.png', 
+                                                resolution=[650, 500], num_samples=512, clip_at=20) 
+
+
+                        # # assign stripe and ru idx
+                        # stripe_idx_arr[tx_idx] = stripe_idx
+                        # ru_idx_arr[tx_idx] = RU_idx
+
+                        # # increment tx idx counter
+                        # tx_idx += 1
+
+                        # done adding all RUs
+
+
+                
+                # solve paths
                 paths = p_solver(scene=scene,
-                                max_depth=5,
+                                max_depth=4,
                                 los=True,
                                 specular_reflection=True,
                                 diffuse_reflection=False, # no scattering
@@ -285,10 +465,12 @@ if __name__ == "__main__":
                                 synthetic_array=False,
                                 seed=41)
 
+                print(f'after path solving - antennas tx {ru_ant_idx} rx {ue_ant_idx}:')
+                info = pynvml.nvmlDeviceGetMemoryInfo(handle)
+                print("Location A memory used (GB):", info.used / (2**30))
+
                 # Compute channel frequency response
                 # Shape: [num_rx, num_rx_ant, num_tx, num_tx_ant, num_time_steps, num_subcarriers]
-                # note that because of cross polarization we get 2*num_rx_ant and 2*num_tx_ant
-                # todo to be checked: structured as [ant_1_pol_1, ant_1_pol_2, ant_2_pol_1, ant_2_pol_2, ..., ant_N_pol_2]
                 h_freq = paths.cfr(frequencies=frequencies,
                                 normalize_delays=True,
                                 out_type="numpy")
@@ -298,42 +480,44 @@ if __name__ == "__main__":
                 plt.xlabel('Subcarrier index')
                 plt.ylabel('|H|')
                 plt.savefig(f'cfr_ue_{ue_idx}_stripe_{stripe_idx}_RU_{RU_idx}.png')
-                sys.exit()
+
 
                 # todo check shapes
                 # reshape to [2*nr_rx_antennas, 2*nr_tx_antennas, nr_subcarriers]
                 h_freq = np.squeeze(h_freq)
                 #print("Shape of h_freq post squeeze: ", h_freq.shape)
 
-                # plug into channel tensor
-                channel_tensor[tx_idx] = h_freq
+                # todo: plug into channel tensor
+                # channel_tensor[tx_idx] = h_freq
 
-                # assign stripe and ru idx
-                stripe_idx_arr[tx_idx] = stripe_idx
-                ru_idx_arr[tx_idx] = RU_idx
 
-                # increment tx idx counter
-                tx_idx += 1
-
-                # remove tx from the scene after computation
-                scene.remove(f"tx_stripe_{stripe_idx}_RU_{RU_idx}")
+                # remove all RUs from the scen
+                for stripe_idx in range(N_stripes):
+                    for RU_idx in range(N_RUs):
+                        scene.remove(f"tx_stripe_{stripe_idx}_RU_{RU_idx}")
 
                 # render scene with tx and rx
                 if intermediate_reders:
                     logger.info(f' rendering scene after removing tx')
                     scene.render_to_file(camera=my_cam, filename=f'scene_tx_removed_stripe_{stripe_idx}_RU_{RU_idx}.png', 
-                                         resolution=[650, 500], num_samples=512, clip_at=20) 
+                                        resolution=[650, 500], num_samples=512, clip_at=20) 
 
+                # # logging
+                # t_end_ue = time.time()
+                # logger.info(f"Finished processing UE {ue_idx}/{ds_users.dims['user']} element 1 and 1 in {t_end_ue-t_start_ue:.2f} seconds")
             # end time for 1 stripe
             #t2 = time.time()
             #logger.info(f"Time to compute stripe {stripe_idx}: {t2-t1:.2f} seconds")
 
-        # remove rx from the scene after computation
-        scene.remove(f"rx_{ue_idx}")
+            # remove rx from the scene after computation
+            scene.remove(f"rx_{ue_idx}")
         
         # logging
         t_end_ue = time.time()
         logger.info(f"Finished processing UE {ue_idx}/{ds_users.dims['user']} in {t_end_ue-t_start_ue:.2f} seconds")
+       
+        """ did one ue position """
+        sys.exit()
 
         # save channel tensor for curren ue
         # Get user attributes
@@ -376,6 +560,9 @@ if __name__ == "__main__":
 
         ds_user_channels.to_netcdf(out_file, format="NETCDF4", auto_complex=True)
         logger.info(f"Saved user {ue_idx} to {out_file}")
+
+        pynvml.nvmlShutdown()
+
 
 
 
