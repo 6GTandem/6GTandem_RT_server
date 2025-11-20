@@ -255,23 +255,6 @@ if __name__ == "__main__":
     N_antennas = config['antenna_config']['N_antennas'] # 4x1 antennas
     logger.info(f'number antennas: {N_antennas}')
 
-    # # todo move this so we can change it per antenna 
-    # scene.tx_array = PlanarArray(num_rows=N_antennas,
-    #                             num_cols=N_antennas,
-    #                             vertical_spacing=0.5,
-    #                             horizontal_spacing=0.5,
-    #                             pattern=config['antenna_config']['pattern'],
-    #                             polarization=config['antenna_config']['polarization'])
-
-    # # Configure antenna array for all receivers
-    # scene.rx_array = PlanarArray(num_rows=N_antennas,
-    #                             num_cols=N_antennas,
-    #                             vertical_spacing=0.5,
-    #                             horizontal_spacing=0.5,
-    #                             pattern=config['antenna_config']['pattern'],
-    #                             polarization=config['antenna_config']['polarization'])
-
-
     # sub-THz stripe specs 
     stripe_start_pos = config['stripe_config']['stripe_start_pos']
     N_RUs = config['stripe_config']['N_RUs'] # adjust to size of the room (along y axis)
@@ -301,9 +284,15 @@ if __name__ == "__main__":
     # The same path solver can be used with multiple scenes
     p_solver  = PathSolver()
     logger.info(f'path solver loop mode: {p_solver.loop_mode}') #symbolic mode is the fastest! 
+
+    # batch size
+    batch_size = config['random_configs']['batch_size']
+    logger.info(f'batch size: {batch_size}')
     
     # loop over al ue postions
-    for ue_idx in range(ds_users.dims['user']):
+    split_point = 2 # process only a subset 
+    for ue_idx in range(min(split_point, ds_users.dims['user'])):
+    #for ue_idx in range(ds_users.dims['user']):
         # output file location
         out_file = os.path.join(channel_output_path, f"channels_thz_ue_{ue_idx}.nc")
         if os.path.exists(out_file):
@@ -314,24 +303,12 @@ if __name__ == "__main__":
             continue
 
         logger.info(f"Processing user {ue_idx}/{ds_users.dims['user']}...")
+        gpuinfo = pynvml.nvmlDeviceGetMemoryInfo(handle)
+        logger.info(f"GPU memory used (GB): {gpuinfo.used / (2**30)}")
 
         # get coordinates
         x, y, z = ds_users.x.values[ue_idx], ds_users.y.values[ue_idx], ds_users.z.values[ue_idx]
         ue_pos = [float(x), float(y), float(z)]
-
-        # # Create a receiver
-        # rx = Receiver(name=f"rx_{ue_idx}",
-        #             position=ue_pos,
-        #             display_radius=0.5)
-        
-        # # Point the receiver upwards
-        # rx.look_at([ue_pos[0], ue_pos[1], 3.5]) # Receiver points upwards
-
-        # # check orientation
-        # #print(f'rx orientation: {rx.orientation}')
-
-        # # Add receiver instance to scene
-        # scene.add(rx)
 
         # add velocity to the user 
         if config['subTHz_config']['doppler']:
@@ -346,7 +323,6 @@ if __name__ == "__main__":
         )
         stripe_idx_arr = np.empty(total_N_RUs, dtype=np.int32)
         ru_idx_arr = np.empty(total_N_RUs, dtype=np.int32)
-
         tx_idx = 0
 
         # start time current ue computation
@@ -377,9 +353,6 @@ if __name__ == "__main__":
             # Point the receiver upwards
             rx.look_at([ue_pos_adjusted[0], ue_pos_adjusted[1], 3.5]) # Receiver points upwards
 
-            # check orientation
-            #print(f'rx orientation: {rx.orientation}')
-
             # Add receiver instance to scene
             scene.add(rx)
 
@@ -394,120 +367,78 @@ if __name__ == "__main__":
                                             num_cols=1,
                                             pattern=f"custom_measured_element_{ru_ant_idx+1}",
                                             polarization=config['antenna_config']['polarization'])
-                
-
-
                 # loop over all stripes
                 for stripe_idx in range(N_stripes):
-                    # start time 1 stripe computation
-                    #t1 = time.time()
-                    # log
-                    #logger.info(f"Processing UE {ue_idx}/{ds_users.dims['user']} stripe {stripe_idx} ...")
-                            # loop over all RUs 
-                    for RU_idx in range(N_RUs):
+                    logger.info(f'Processing UE {ue_idx}, UE ant {ue_ant_idx}, RU ant {ru_ant_idx}, stripe {stripe_idx}...')
+
+                    # loop over batches of RUs (because all RUs may not fit in memory)
+                    for batch_start in range(0, N_RUs, batch_size):
+                        batch_end = min(batch_start + batch_size, N_RUs)
+
+                        tx_list = []  # store TX objects of this batch
+                        ru_idx_list = []  # store indices of the RUs of this batch (needed when saving results)
+
+                        # --- Build batch ---
+                        for RU_idx in range(batch_start, batch_end):
+                            # compute RU position
+                            tx_pos = [stripe_start_pos[0] + stripe_idx * space_between_stripses,
+                                    stripe_start_pos[1] + RU_idx * space_between_RUs,
+                                    stripe_start_pos[2]]
+
+                            antenna_spacing_offset_ru = start_offset + (ru_ant_idx * antenna_spacing)
+                            tx_pos_adjusted = np.array(tx_pos) # Copy the base position [x, y, z]
+                            tx_pos_adjusted[0] += antenna_spacing_offset # Apply offset to the x-coordinate (for a ULA along X)
+                            tx_pos_adjusted = tx_pos_adjusted.tolist()
+
+                            # Create RU transmitter instance
+                            tx = Transmitter(name=f"tx_stripe_{stripe_idx}_RU_{RU_idx}",
+                                        position=tx_pos_adjusted,
+                                        display_radius=0.1)
+                            tx_list.append(f"tx_stripe_{stripe_idx}_RU_{RU_idx}")
+                            ru_idx_list.append(RU_idx)
+
+                            # Add RU transmitter instance to scene
+                            scene.add(tx)
+
+                            # Point the transmitter downwards
+                            tx.look_at([tx_pos_adjusted[0], tx_pos_adjusted[1], 0]) # Transmitter points downwards
+
+                        # solve paths for current batch
+                        paths = p_solver(scene=scene,
+                                        max_depth=4,
+                                        los=True,
+                                        specular_reflection=True,
+                                        diffuse_reflection=False, # no scattering
+                                        refraction=True,
+                                        synthetic_array=False,
+                                        seed=41)
+                        # Compute channel frequency response
+                        # Shape: [num_rx, num_rx_ant, num_tx, num_tx_ant, num_time_steps, num_subcarriers]
+                        h_freq = paths.cfr(frequencies=frequencies,
+                                        normalize_delays=True,
+                                        out_type="numpy")
                         
-                        # todo add lambda/2 offset for each antenna element
-                        # compute RU position
-                        tx_pos = [stripe_start_pos[0] + stripe_idx * space_between_stripses,
-                                stripe_start_pos[1] + RU_idx * space_between_RUs,
-                                stripe_start_pos[2]]
+                        # print("Shape of h_freq: ", h_freq.shape)
+                        # plt.stem(np.abs(h_freq[0, 0, 0, 0, 0, :]))
+                        # plt.xlim(0, 100)
+                        # plt.xlabel('Subcarrier index')
+                        # plt.ylabel('|H|')
+                        # plt.savefig(f'/home/user/6GTandem_RT_server/testingchannel.png')
 
-                        antenna_spacing_offset_ru = start_offset + (ru_ant_idx * antenna_spacing)
-                        tx_pos_adjusted = np.array(tx_pos) # Copy the base position [x, y, z]
-                        tx_pos_adjusted[0] += antenna_spacing_offset # Apply offset to the x-coordinate (for a ULA along X)
-                        tx_pos_adjusted = tx_pos_adjusted.tolist()
-                        #print(f'original tx pos: {tx_pos}, adjusted tx pos for ant idx {ru_ant_idx}: {tx_pos_adjusted} - antenna spacing: {antenna_spacing}')
+                        # reshape to [batchsize, nr_subcarriers] # nrRUs in batch for 1 tx ant and 1 rx ant 
+                        h_freq = np.squeeze(h_freq)
+                        h_freq = h_freq[:, np.newaxis, np.newaxis, :] # add ant dims back [batchsize, 1, 1, nr_subcarriers]
 
-                        
-                        # Create RU transmitter instance
-                        tx = Transmitter(name=f"tx_stripe_{stripe_idx}_RU_{RU_idx}",
-                                    position=tx_pos_adjusted,
-                                    display_radius=0.1)
+                        # saving results
+                        for i_in_batch, RU_idx in enumerate(ru_idx_list):
+                            global_idx = stripe_idx * N_RUs + RU_idx # tx_idx in old (unbatched) code
+                            channel_tensor[global_idx] = h_freq[i_in_batch] # store into channel tensor
+                            stripe_idx_arr[global_idx] = stripe_idx
+                            ru_idx_arr[global_idx]     = RU_idx
 
-                        # Add RU transmitter instance to scene
-                        scene.add(tx)
-
-                        print(f'After adding tx_stripe_{stripe_idx}_RU_{RU_idx}:')
-                        info = pynvml.nvmlDeviceGetMemoryInfo(handle)
-                        print("Location A memory used (GB):", info.used / (2**30))
-
-                        # Point the transmitter downwards
-                        tx.look_at([tx_pos_adjusted[0], tx_pos_adjusted[1], 0]) # Transmitter points downwards
-
-                        # check orientation
-                        #print(f'tx orientation: {tx.orientation}')
-
-                        # render scene with tx and rx
-                        if intermediate_reders:
-                            logger.info(f' rendering scene prior to path solver')
-                            scene.render_to_file(camera=my_cam, filename=f'scene_with_stripe_{stripe_idx}_RU_{RU_idx}.png', 
-                                                resolution=[650, 500], num_samples=512, clip_at=20) 
-
-
-                        # # assign stripe and ru idx
-                        # stripe_idx_arr[tx_idx] = stripe_idx
-                        # ru_idx_arr[tx_idx] = RU_idx
-
-                        # # increment tx idx counter
-                        # tx_idx += 1
-
-                        # done adding all RUs
-
-
-                
-                # solve paths
-                paths = p_solver(scene=scene,
-                                max_depth=4,
-                                los=True,
-                                specular_reflection=True,
-                                diffuse_reflection=False, # no scattering
-                                refraction=True,
-                                synthetic_array=False,
-                                seed=41)
-
-                print(f'after path solving - antennas tx {ru_ant_idx} rx {ue_ant_idx}:')
-                info = pynvml.nvmlDeviceGetMemoryInfo(handle)
-                print("Location A memory used (GB):", info.used / (2**30))
-
-                # Compute channel frequency response
-                # Shape: [num_rx, num_rx_ant, num_tx, num_tx_ant, num_time_steps, num_subcarriers]
-                h_freq = paths.cfr(frequencies=frequencies,
-                                normalize_delays=True,
-                                out_type="numpy")
-                print("Shape of h_freq: ", h_freq.shape)
-
-                plt.plot(np.abs(h_freq[0, 0, 0, 0, 0, :]))
-                plt.xlabel('Subcarrier index')
-                plt.ylabel('|H|')
-                plt.savefig(f'cfr_ue_{ue_idx}_stripe_{stripe_idx}_RU_{RU_idx}.png')
-
-
-                # todo check shapes
-                # reshape to [2*nr_rx_antennas, 2*nr_tx_antennas, nr_subcarriers]
-                h_freq = np.squeeze(h_freq)
-                #print("Shape of h_freq post squeeze: ", h_freq.shape)
-
-                # todo: plug into channel tensor
-                # channel_tensor[tx_idx] = h_freq
-
-
-                # remove all RUs from the scen
-                for stripe_idx in range(N_stripes):
-                    for RU_idx in range(N_RUs):
-                        scene.remove(f"tx_stripe_{stripe_idx}_RU_{RU_idx}")
-
-                # render scene with tx and rx
-                if intermediate_reders:
-                    logger.info(f' rendering scene after removing tx')
-                    scene.render_to_file(camera=my_cam, filename=f'scene_tx_removed_stripe_{stripe_idx}_RU_{RU_idx}.png', 
-                                        resolution=[650, 500], num_samples=512, clip_at=20) 
-
-                # # logging
-                # t_end_ue = time.time()
-                # logger.info(f"Finished processing UE {ue_idx}/{ds_users.dims['user']} element 1 and 1 in {t_end_ue-t_start_ue:.2f} seconds")
-            # end time for 1 stripe
-            #t2 = time.time()
-            #logger.info(f"Time to compute stripe {stripe_idx}: {t2-t1:.2f} seconds")
+                        # remove all RUs of current batch from the scene
+                        for tx_string in tx_list:
+                            scene.remove(tx_string)
 
             # remove rx from the scene after computation
             scene.remove(f"rx_{ue_idx}")
@@ -517,7 +448,6 @@ if __name__ == "__main__":
         logger.info(f"Finished processing UE {ue_idx}/{ds_users.dims['user']} in {t_end_ue-t_start_ue:.2f} seconds")
        
         """ did one ue position """
-        sys.exit()
 
         # save channel tensor for curren ue
         # Get user attributes
@@ -550,8 +480,8 @@ if __name__ == "__main__":
                 "tx_pair": np.arange(total_N_RUs),
                 "stripe_idx": ("tx_pair", stripe_idx_arr),
                 "RU_idx": ("tx_pair", ru_idx_arr),
-                "rx_ant": np.arange(2*N_antennas**2),
-                "tx_ant": np.arange(2*N_antennas**2),
+                "rx_ant": np.arange(N_antennas),
+                "tx_ant": np.arange(N_antennas),
                 "subcarrier": np.arange(num_subcarriers),
             },
             attrs=user_attrs
