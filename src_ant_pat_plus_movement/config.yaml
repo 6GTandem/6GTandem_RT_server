@@ -1,6 +1,6 @@
 stripe_config: 
   N_RUs: 20 #per stripe (20)
-  N_stripes: 6 
+  N_stripes: 6 #6 
   space_between_RUs: 1 #m
   space_between_stripes: 1 #m
   stripe_start_pos: [2, 2.5, 3.5] #x,y,z

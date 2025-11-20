@@ -1,3 +1,5 @@
+import os
+os.environ["CUDA_VISIBLE_DEVICES"] = "1"  # only GPU 1 visible
 import sionna.rt
 import time
 import tensorflow as tf
@@ -5,7 +7,6 @@ import matplotlib.pyplot as plt
 import xarray as xr
 import numpy as np
 from tqdm import tqdm
-import os
 import pandas as pd
 from scipy.interpolate import RegularGridInterpolator
 from scipy.constants import speed_of_light
@@ -30,23 +31,24 @@ def setup():
     if gpus:
         # Restrict TensorFlow to only use the first GPU
         try:
-            tf.config.set_visible_devices(gpus[0], 'GPU') # only use the first GPU
-            logical_gpus = tf.config.list_logical_devices('GPU')
-            logger.info("%d Physical GPUs, %d Logical GPUs", len(gpus), len(logical_gpus))
-            logger.info("Using GPU: %s", gpus[0].name)
+            # tf.config.set_visible_devices(gpus[1], 'GPU') # only use the first GPU
+            # logical_gpus = tf.config.list_logical_devices('GPU')
+            # logger.info("%d Physical GPUs, %d Logical GPUs", len(gpus), len(logical_gpus))
+            logger.info("Using GPU: %s", gpus)
+            
         except RuntimeError as e:
             # Visible devices must be set before GPUs have been initialized
             logger.info(e)
     else:
         logger.info("No GPU found, using CPU.")
     
-    # limit tf allocation growth
-    if gpus:
-        try:
-            for gpu in gpus:
-                tf.config.experimental.set_memory_growth(gpu, True)
-        except RuntimeError as e:
-            print(e)
+    # # limit tf allocation growth
+    # if gpus:
+    #     try:
+    #         for gpu in gpus:
+    #             tf.config.experimental.set_memory_growth(gpu, True)
+    #     except RuntimeError as e:
+    #         print(e)
 
 
 def set_materials(scene, config):
@@ -114,10 +116,11 @@ class MeasuredPattern(AntennaPattern):
     'Phi[deg]', 'Theta[deg]', 'mag(rERHCP)[mV]', 'ang_deg(rERHCP)[deg]'
     """
 
-    def __init__(self, csv_path, normalize=True):
+    def __init__(self, csv_path, normalize=False):
         super().__init__()
 
         # ---- Load CSV ----
+        self.path = csv_path
         df = pd.read_csv(csv_path)
         phi_deg = df["Phi[deg]"].values # degrees
         theta_deg = df["Theta[deg]"].values # degrees
@@ -187,7 +190,7 @@ if __name__ == "__main__":
 
     # Configure logging
     log_time = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-    log_filename = f"run_{log_time}.log"
+    log_filename = f"gpu_2_run_{log_time}.log"
     logging.basicConfig(
         filename=log_filename,              # Log file name
         filemode='a',                    # Append mode
@@ -290,8 +293,8 @@ if __name__ == "__main__":
     logger.info(f'batch size: {batch_size}')
     
     # loop over al ue postions
-    split_point = 2 # process only a subset 
-    for ue_idx in range(min(split_point, ds_users.dims['user'])):
+    split_point = 1500 # process only a subset 
+    for ue_idx in range(split_point, ds_users.dims['user']):
     #for ue_idx in range(ds_users.dims['user']):
         # output file location
         out_file = os.path.join(channel_output_path, f"channels_thz_ue_{ue_idx}.nc")
@@ -339,6 +342,8 @@ if __name__ == "__main__":
                                         num_cols=1,
                                         pattern=f"custom_measured_element_{ue_ant_idx+1}",
                                         polarization=config['antenna_config']['polarization'])
+            
+            #print(f'ue_ant_idx: {ue_ant_idx}, pattern: {scene.rx_array._antenna_pattern.__dict__}')
 
             # Create a receiver
             antenna_spacing_offset = start_offset + (ue_ant_idx * antenna_spacing)
@@ -367,9 +372,11 @@ if __name__ == "__main__":
                                             num_cols=1,
                                             pattern=f"custom_measured_element_{ru_ant_idx+1}",
                                             polarization=config['antenna_config']['polarization'])
+                #print(f'ru_ant_idx: {ru_ant_idx}, pattern: {scene.tx_array._antenna_pattern.__dict__}')
+
                 # loop over all stripes
                 for stripe_idx in range(N_stripes):
-                    logger.info(f'Processing UE {ue_idx}, UE ant {ue_ant_idx}, RU ant {ru_ant_idx}, stripe {stripe_idx}...')
+                    #logger.info(f'Processing UE {ue_idx}, UE ant {ue_ant_idx}, RU ant {ru_ant_idx}, stripe {stripe_idx}...')
 
                     # loop over batches of RUs (because all RUs may not fit in memory)
                     for batch_start in range(0, N_RUs, batch_size):
@@ -442,11 +449,7 @@ if __name__ == "__main__":
 
             # remove rx from the scene after computation
             scene.remove(f"rx_{ue_idx}")
-        
-        # logging
-        t_end_ue = time.time()
-        logger.info(f"Finished processing UE {ue_idx}/{ds_users.dims['user']} in {t_end_ue-t_start_ue:.2f} seconds")
-       
+
         """ did one ue position """
 
         # save channel tensor for curren ue
@@ -491,7 +494,13 @@ if __name__ == "__main__":
         ds_user_channels.to_netcdf(out_file, format="NETCDF4", auto_complex=True)
         logger.info(f"Saved user {ue_idx} to {out_file}")
 
-        pynvml.nvmlShutdown()
+        # logging
+        t_end_ue = time.time()
+        time_1_user = t_end_ue - t_start_ue
+        logger.info(f"Finished processing UE {ue_idx}/{min(split_point, ds_users.dims['user'])} in {time_1_user:.2f} seconds")
+        logger.info(f"=====================> Estimated time left (h): {(time_1_user * (ds_users.dims['user'] - ue_idx - 1)) / 3600:.2f} hours")
+
+    pynvml.nvmlShutdown()
 
 
 
