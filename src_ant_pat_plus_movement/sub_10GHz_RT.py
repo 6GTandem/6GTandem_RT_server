@@ -14,6 +14,25 @@ from ue_locations_generator import create_user_location_dataset
 import logging
 import datetime
 
+def format_seconds_to_h_m(total_seconds):
+    """Converts total seconds into a string formatted as 'Hh Mm s'."""
+    if total_seconds < 0:
+        total_seconds = 0
+    # Calculate hours and remaining seconds
+    hours = int(total_seconds // 3600)
+    remaining_seconds = total_seconds % 3600
+    # Calculate minutes and final seconds
+    minutes = int(remaining_seconds // 60)
+    seconds = int(remaining_seconds % 60)
+    
+    if hours > 0:
+        return f"{hours}h {minutes}m {seconds}s"
+    elif minutes > 0:
+        return f"{minutes}m {seconds}s"
+    else:
+        # Show higher precision if time is very short
+        return f"{total_seconds:.2f}s"
+
 def setup():
     # check versions and set up GPU
     logger.info(f"Sionna version: {sionna.rt.__version__}" )
@@ -143,23 +162,23 @@ if __name__ == "__main__":
     set_materials(scene, config)
 
     # configure tx and rx arrays
-    N_antennas = config['antenna_config']['N_antennas_per_axis']
-    logger.info(f'number antennas per axis: {N_antennas}')
+    N_antennas = config['sub10GHz_config']['N_sub10GHz_antennas']
+    logger.info(f'number antennas per axis: {N_antennas}, antenna pattern: {config["sub10GHz_config"]["pattern"]}, polarization: {config["sub10GHz_config"]["polarization"]} ')
 
     scene.tx_array = PlanarArray(num_rows=N_antennas,
                                 num_cols=N_antennas,
                                 vertical_spacing=0.5,
                                 horizontal_spacing=0.5,
-                                pattern=config['antenna_config']['pattern'],
-                                polarization=config['antenna_config']['polarization'])
+                                pattern=config['sub10GHz_config']['pattern'],
+                                polarization=config['sub10GHz_config']['polarization'])
 
     # Configure antenna array for all receivers
     scene.rx_array = PlanarArray(num_rows=N_antennas,
                                 num_cols=N_antennas,
                                 vertical_spacing=0.5,
                                 horizontal_spacing=0.5,
-                                pattern=config['antenna_config']['pattern'],
-                                polarization=config['antenna_config']['polarization'])
+                                pattern=config['sub10GHz_config']['pattern'],
+                                polarization=config['sub10GHz_config']['polarization'])
     
     
 
@@ -258,7 +277,7 @@ if __name__ == "__main__":
 
         # Preallocate channel tensor for APs and index arrays (2x N^2 because cross polarization)
         channel_tensor = np.empty(
-            (N_APS, 2*N_antennas**2, 2*N_antennas**2, num_subcarriers),
+            (N_APS, 2*N_antennas, 2*N_antennas, num_subcarriers),
             dtype=np.complex64
         ) 
 
@@ -302,7 +321,21 @@ if __name__ == "__main__":
         
         # logging
         t_end_ue = time.time()
-        logger.info(f"Finished processing UE {ue_idx}/{ds_users.dims['user']} in {t_end_ue-t_start_ue:.2f} seconds - estimated time remaining: {((ds_users.dims['user'] - ue_idx - 1) * (t_end_ue-t_start_ue)):.2f} seconds")
+
+        # Calculate times
+        time_elapsed_ue = t_end_ue - t_start_ue
+        remaining_users = ds_users.dims['user'] - ue_idx - 1
+        time_remaining_total_s = remaining_users * time_elapsed_ue
+        
+        # Format times
+        time_elapsed_formatted = format_seconds_to_h_m(time_elapsed_ue)
+        time_remaining_formatted = format_seconds_to_h_m(time_remaining_total_s)
+
+        logger.info(
+                    f"Finished processing UE {ue_idx}/{ds_users.dims['user']} "
+                    f"in {time_elapsed_formatted} - "
+                    f"estimated time remaining: {time_remaining_formatted}"
+                )
 
         # save channel tensor for curren ue
         # Get user attributes
@@ -333,8 +366,8 @@ if __name__ == "__main__":
             },
             coords={
                 "ap": ap_names,
-                "rx_ant": np.arange(2*N_antennas**2),
-                "tx_ant": np.arange(2*N_antennas**2),
+                "rx_ant": np.arange(2*N_antennas),
+                "tx_ant": np.arange(2*N_antennas),
                 "subcarrier": np.arange(num_subcarriers),
             },
             attrs=user_attrs

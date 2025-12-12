@@ -8,7 +8,7 @@ stripe_config:
 
 antenna_config: 
   N_antennas: 4
-  pattern: 'measured'
+  pattern: 'iso'#'measured'
   polarization: 'V'
 
 subTHz_config:
@@ -21,7 +21,10 @@ sub10GHz_config:
   fc:  3.5e+9 
   bw:  20.0e+6 
   num_subcarriers: 1024 
+  N_sub10GHz_antennas: 2 # per direction (V and H) => 2x2 array
   num_APs : 4 # number of APs in the scene
+  pattern: 'iso'
+  polarization: 'V'
   ap_pos_ceil_1: [5.25, 7.25, 3.5] # xyz
   ap_pos_ceil_2: [5.25, 18.25, 3.5] # xyz
   ap_pos_wall_1: [2, 13, 2.5] # xyz
@@ -32,7 +35,7 @@ ue_locations_config:
   num_locations_zone1: 2000 #3000 #other locations are computed based on area
  # total number will be ~ num_locations_zone1 * 1.712 + N_RUs*N_stripes
 paths:
-  basepath: "/home/user/6GTandem_RT_server/datasets_mobility_rad_pat"
+  basepath: "/home/user/6GTandem_RT_server/datasets_rad_pat_debug"
   scenepath: "/home/user/6GTandem_RT_server/6G_Tandem_kantoorruimte_v10/office_space.xml"
   antenna_rad_path: "/home/user/6GTandem_RT_server/antenna_patterns"
 
