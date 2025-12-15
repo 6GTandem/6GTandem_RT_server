@@ -72,15 +72,15 @@ def set_materials(scene, config):
     logger.info(glass_objects.radio_material.name)
     logger.info(glass_objects.radio_material.frequency_update_callback)
 
-    # no-name-2 => ituf_concrete
+    # no-name-2 =>ituf_metal
     concrete_objects = scene.get("no-name-2")
-    concrete_objects.radio_material.frequency_update_callback = ituf_concrete_callback
+    concrete_objects.radio_material.frequency_update_callback = ituf_metal_callback
     logger.info(concrete_objects.radio_material.name)
     logger.info(concrete_objects.radio_material.frequency_update_callback)
 
-    # no-name-3 => ituf_metal
+    # no-name-3 =>  ituf_concrete
     metal_objects = scene.get("no-name-3")
-    metal_objects.radio_material.frequency_update_callback = ituf_metal_callback
+    metal_objects.radio_material.frequency_update_callback = ituf_concrete_callback
     logger.info(metal_objects.radio_material.name)
     logger.info(metal_objects.radio_material.frequency_update_callback)
 
