@@ -38,7 +38,7 @@ def ituf_mdf_callback(f_hz):
   conductivity = c*np.power(f_ghz, d)
   return (relative_permittivity, conductivity)
 
-def load_config(path='/home/user/6GTandem_RT_server/src_ant_pat_plus_movement/config.yaml'):
+def load_config(path='config.yaml'):
     with open(path, 'r') as file:
         config = yaml.safe_load(file)
     return config

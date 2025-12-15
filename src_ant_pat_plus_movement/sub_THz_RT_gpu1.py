@@ -1,113 +1,56 @@
 import os
-os.environ["CUDA_VISIBLE_DEVICES"] = "0"  # only GPU 1 visible
 import sionna.rt
 import time
-import tensorflow as tf
-import matplotlib.pyplot as plt
 import xarray as xr
 import numpy as np
-from tqdm import tqdm
-import os
 import pandas as pd
 from scipy.interpolate import RegularGridInterpolator
 from scipy.constants import speed_of_light
-from sionna.rt import load_scene, AntennaArray, PlanarArray, Transmitter, Receiver, Camera,\
-                      PathSolver, RadioMapSolver, subcarrier_frequencies, AntennaPattern
+from sionna.rt import load_scene, PlanarArray, Transmitter, Receiver, Camera,\
+                      PathSolver, subcarrier_frequencies, AntennaPattern
 from utils import ituf_glass_callback, ituf_concrete_callback, ituf_metal_callback, \
                   ituf_polystyrene_callback, ituf_mdf_callback, load_config, create_folder
 from ue_locations_generator import create_user_location_dataset
 import logging
 import datetime
-import sys
 import mitsuba as mi
-import pynvml
+from sionna.rt import ITURadioMaterial
+
+# For the custom materials, use an ITU material and change its callback.
+def custom_mat(props, callback):
+    itu_material = ITURadioMaterial(props=props)
+    itu_material.frequency_update_callback = callback
+
+    return itu_material
+
+# Custom material BSDFs. These must match with the BSDF names in the .xml file.
+# In the XML file the BSDF material must have a <string name="type" value="glass"/>
+# where value is an existing ITU material.
+mi.register_bsdf("custom_glass", lambda props: custom_mat(props, ituf_glass_callback))
+mi.register_bsdf("custom_polystyrene", lambda props: custom_mat(props, ituf_polystyrene_callback))
+mi.register_bsdf("custom_concrete", lambda props: custom_mat(props, ituf_concrete_callback))
+mi.register_bsdf("custom_mdf", lambda props: custom_mat(props, ituf_mdf_callback))
+mi.register_bsdf("custom_metal", lambda props: custom_mat(props, ituf_metal_callback))
 
 
-def setup():
-    # check versions and set up GPU
-    logger.info(f"Sionna version: {sionna.rt.__version__}" )
-    logger.info("ftf version: {tf.__version__}")
-    gpus = tf.config.list_physical_devices('GPU')
-    #logger.info("GPU:", gpus)
-    if gpus:
-        # Restrict TensorFlow to only use the first GPU
-        try:
-            # tf.config.set_visible_devices(gpus[0], 'GPU') # only use the first GPU
-            # logical_gpus = tf.config.list_logical_devices('GPU')
-            # logger.info("%d Physical GPUs, %d Logical GPUs", len(gpus), len(logical_gpus))
-            # logger.info("Using GPU: %s", gpus[0].name)
-            logger.info("Using GPU: %s", gpus)
-
-        except RuntimeError as e:
-            # Visible devices must be set before GPUs have been initialized
-            logger.info(e)
-    else:
-        logger.info("No GPU found, using CPU.")
-    
-    # # limit tf allocation growth
-    # if gpus:
-    #     try:
-    #         for gpu in gpus:
-    #             tf.config.experimental.set_memory_growth(gpu, True)
-    #     except RuntimeError as e:
-    #         print(e)
-
-
-def set_materials(scene, config):
-    # check which materials are available in the scene
-    logger.info("Available materials:")
-    for name, obj in scene.objects.items():
-        logger.info(f'{name:<15}{obj.radio_material.name}')
-
-    # set materials for the scene
-    # add callbacks to the materials
-    logger.info("radio materials with associated callbacks:")
-    # Ceiling_Detail => polystyrene
-    ceiling_object = scene.get("Ceiling_Detail")
-    ceiling_object.radio_material.frequency_update_callback = ituf_polystyrene_callback
-    logger.info(ceiling_object.radio_material.name)
-    logger.info(ceiling_object.radio_material.frequency_update_callback)
-
-    # no-name-1 => ituf_glass
-    glass_objects = scene.get("no-name-1")
-    glass_objects.radio_material.frequency_update_callback = ituf_glass_callback
-    logger.info(glass_objects.radio_material.name)
-    logger.info(glass_objects.radio_material.frequency_update_callback)
-
-    # no-name-2 => ituf_concrete
-    concrete_objects = scene.get("no-name-2")
-    concrete_objects.radio_material.frequency_update_callback = ituf_concrete_callback
-    logger.info(concrete_objects.radio_material.name)
-    logger.info(concrete_objects.radio_material.frequency_update_callback)
-
-    # no-name-3 => ituf_metal
-    metal_objects = scene.get("no-name-3")
-    metal_objects.radio_material.frequency_update_callback = ituf_metal_callback
-    logger.info(metal_objects.radio_material.name)
-    logger.info(metal_objects.radio_material.frequency_update_callback)
-
-    # no-name-4 => ituf_mdf
-    metal_mdf = scene.get("no-name-4")
-    metal_mdf.radio_material.frequency_update_callback = ituf_mdf_callback
-    logger.info(metal_mdf.radio_material.name)
-    logger.info(metal_mdf.radio_material.frequency_update_callback)
-
+def check_materials(config, scene):
     # check conductivity and relative permittivity at different frequencies
     # loop through material names and print them
     sub_GHz = config['sub10GHz_config']['fc']
     sub_THz = config['subTHz_config']['fc']
-    logger.info(f"Checking materials at {sub_GHz/1e9} GHz and {sub_THz/1e9} GHz")
+    logger.info(f"Checking materials at {sub_GHz / 1e9} GHz and {sub_THz / 1e9} GHz")
     for key, value in scene.objects.items():
         logger.info(f'---------------{key=}----------------')
         # Print name of assigned radio material for different frequenies
         for f in [sub_GHz, sub_THz]: # Print for differrent frequencies
             scene.frequency = f
             value.radio_material.frequency_update() # update the frequency of the objects
-            logger.info(f"\nRadioMaterial: {value.radio_material.name} at {scene.frequency/1e9} GHz")
+            logger.info(f"\nRadioMaterial: {value.radio_material.name} at {scene.frequency[0] / 1e9} GHz")
             logger.info(f"Conductivity: {value.radio_material.conductivity.numpy()}")
             logger.info(f"Relative permittivity: {value.radio_material.relative_permittivity.numpy()}")
             logger.info(f"Scattering coefficient: {value.radio_material.scattering_coefficient.numpy()}")
             logger.info(f"XPD coefficient: {value.radio_material.xpd_coefficient.numpy()}")
+
 
 """ custom patterns for sionna based on measurements """
 # antenna pattern based on measurements
@@ -126,7 +69,7 @@ class MeasuredPattern(AntennaPattern):
         df = pd.read_csv(csv_path)
         phi_deg = df["Phi[deg]"].values # degrees
         theta_deg = df["Theta[deg]"].values # degrees
-        mag = df["mag(rERHCP)[mV]"].values/1000  # convert mV to V
+        mag = df["mag(rERHCP)[mV]"].values / 1000  # convert mV to V
         #print(f'max mag in MeasuredPattern: {np.max(mag)*1000} mV')
         ang_deg = df["ang_deg(rERHCP)[deg]"].values
 
@@ -168,9 +111,6 @@ class MeasuredPattern(AntennaPattern):
             pts = np.stack([theta_np, phi_np], axis=-1)
             field_np = self._interp(pts)
 
-            # Convert back to TF complex tensor
-            field = tf.constant(field_np, dtype=tf.complex64)
-
             field_np = np.asarray(field_np, dtype=np.complex64)
             E_theta_np = field_np / np.sqrt(2)
             E_phi_np = 1j * field_np / np.sqrt(2)
@@ -186,10 +126,6 @@ class MeasuredPattern(AntennaPattern):
 
 
 if __name__ == "__main__":
-    # for gpu monitoring
-    pynvml.nvmlInit()
-    handle = pynvml.nvmlDeviceGetHandleByIndex(0)  # Use GPU 0, change index for other GPUs
-
     # Configure logging
     log_time = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
     log_filename = f"gpu_1_run_{log_time}.log"
@@ -210,12 +146,10 @@ if __name__ == "__main__":
     logger = logging.getLogger()
     logger.addHandler(console_handler)
 
-    # check versions and set up GPU
-    setup()
+    logger.info(f"Sionna version: {sionna.rt.__version__}" )
 
     # load config file
     config = load_config()
-
     print(f'config loaded: {config}')
 
     # register antenna patterns
@@ -245,6 +179,9 @@ if __name__ == "__main__":
     # load scene# Load scene
     scene = load_scene(config['paths']['scenepath']) 
 
+    # Check that the right custom materials are set.
+    check_materials(config, scene)
+
     # preview scene 
     # Create new camera with different configuration
     my_cam = Camera(position=[9,35,0.5], look_at=[0,0,3])
@@ -254,7 +191,7 @@ if __name__ == "__main__":
         scene.render_to_file(camera=my_cam, filename='empty_scene.png', resolution=[650, 500], num_samples=512, clip_at=20) # Increase num_samples to increase image quality
 
     # set materials for the scene
-    set_materials(scene, config)
+    #set_materials(scene, config)
 
     # configure tx and rx arrays
     N_antennas = config['antenna_config']['N_antennas'] # 4x1 antennas
@@ -280,8 +217,8 @@ if __name__ == "__main__":
 
     # set scene frequency
     scene.frequency = config['subTHz_config']['fc']# Set frequency to fc 
-    antenna_spacing = (speed_of_light / scene.frequency) / 2  # half wavelength spacing
-    logger.info(f"scene frequency set to: {scene.frequency}")
+    antenna_spacing = (speed_of_light / scene.frequency[0]) / 2  # half wavelength spacing
+    logger.info(f"scene frequency set to: {scene.frequency[0]}")
     logger.info(f"antenna spacing set to: {antenna_spacing} meters")
 
 
@@ -296,8 +233,8 @@ if __name__ == "__main__":
     
     # loop over al ue postions
     split_point = 1500 # process only a subset 
-    for ue_idx in range(min(split_point, ds_users.dims['user'])):
-    #for ue_idx in range(ds_users.dims['user']):
+    for ue_idx in range(min(split_point, ds_users.sizes['user'])):
+    #for ue_idx in range(ds_users.sizes['user']):
         # output file location
         out_file = os.path.join(channel_output_path, f"channels_thz_ue_{ue_idx}.nc")
         if os.path.exists(out_file):
@@ -307,9 +244,7 @@ if __name__ == "__main__":
             logger.info(f'User {ue_idx} is at an invalid location (within an object) and will not be processed. Skipping.')
             continue
 
-        logger.info(f"Processing user {ue_idx}/{ds_users.dims['user']}...")
-        gpuinfo = pynvml.nvmlDeviceGetMemoryInfo(handle)
-        logger.info(f"GPU memory used (GB): {gpuinfo.used / (2**30)}")
+        logger.info(f"Processing user {ue_idx}/{ds_users.sizes['user']}...")
 
         # get coordinates
         x, y, z = ds_users.x.values[ue_idx], ds_users.y.values[ue_idx], ds_users.z.values[ue_idx]
@@ -500,15 +435,5 @@ if __name__ == "__main__":
         # logging
         t_end_ue = time.time()
         time_1_user = t_end_ue - t_start_ue
-        logger.info(f"Finished processing UE {ue_idx}/{min(split_point, ds_users.dims['user'])} in {time_1_user:.2f} seconds")
-        logger.info(f"Estimated time left (h): {(time_1_user * (min(split_point, ds_users.dims['user']) - ue_idx - 1)) / 3600:.2f} hours")
-
-    pynvml.nvmlShutdown()
-
-
-
-
-
-    
-    
-    
+        logger.info(f"Finished processing UE {ue_idx}/{min(split_point, ds_users.sizes['user'])} in {time_1_user:.2f} seconds")
+        logger.info(f"Estimated time left (h): {(time_1_user * (min(split_point, ds_users.sizes['user']) - ue_idx - 1)) / 3600:.2f} hours")

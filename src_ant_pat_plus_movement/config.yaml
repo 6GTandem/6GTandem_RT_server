@@ -12,14 +12,14 @@ antenna_config:
   polarization: 'V'
 
 subTHz_config:
-  fc:  157.75e+9 
-  bw:  3.0e+9 #6.0e+9 
+  fc: 157.75e+9 
+  bw: 3.0e+9 #6.0e+9 
   num_subcarriers: 4096 #1024
   doppler: False # todo add
 
 sub10GHz_config:
-  fc:  3.5e+9 
-  bw:  20.0e+6 
+  fc: 3.5e+9 
+  bw: 20.0e+6 
   num_subcarriers: 1024 
   N_sub10GHz_antennas: 2 # per direction (V and H) => 2x2 array
   num_APs : 4 # number of APs in the scene
@@ -35,13 +35,13 @@ ue_locations_config:
   num_locations_zone1: 2000 #3000 #other locations are computed based on area
  # total number will be ~ num_locations_zone1 * 1.712 + N_RUs*N_stripes
 paths:
-  basepath: "/home/user/6GTandem_RT_server/datasets_rad_pat_debug"
-  scenepath: "/home/user/6GTandem_RT_server/6G_Tandem_kantoorruimte_v10/office_space.xml"
-  antenna_rad_path: "/home/user/6GTandem_RT_server/antenna_patterns"
+  basepath: "/home/dramco_spark/6GTandem_RT_server/datasets_rad_pat_debug"
+  scenepath: "/home/dramco_spark/6GTandem_RT_server/6G_Tandem_kantoorruimte_v10/office_space.xml"
+  antenna_rad_path: "/home/dramco_spark/6GTandem_RT_server/antenna_patterns"
 
 
 random_configs:
   intermediate_renders: False # intermediatelly render the scene
   ue_orientation: 'up' #ue array is pointed upward (not used just as FYI)
   RU_orientation: 'down' #ru array is pointed downward (not used just as FYI)
-  batch_size: 5 #number of RUs to process in parallel (depends on RAM/GPU memory)
+  batch_size: 120 #number of RUs to process in parallel (depends on RAM/GPU memory)

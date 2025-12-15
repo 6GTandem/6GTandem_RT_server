@@ -35,80 +35,20 @@
 
 <!-- Materials -->
 
-	<bsdf type="twosided" id="mat-ituf_concrete" name="mat-ituf_concrete">
-		<bsdf type="principled" name="bsdf">
-			<rgb value="0.185905 0.173517 0.164064" name="base_color"/>
-			<rgb value="1.000000 1.000000 1.000000" name="spec_tint"/>
-			<float name="spec_trans" value="0.000000"/>
-			<float name="metallic" value="0.000000"/>
-			<float name="anisotropic" value="0.000000"/>
-			<float name="roughness" value="0.250000"/>
-			<float name="sheen" value="0.000000"/>
-			<rgb value="1.000000 1.000000 1.000000" name="sheen_tint"/>
-			<float name="clearcoat" value="0.000000"/>
-			<float name="clearcoat_gloss" value="0.000900"/>
-			<float name="specular" value="0.500000"/>
-		</bsdf>
+	<bsdf type="custom_concrete" id="mat-ituf_concrete" name="mat-ituf_concrete">
+		<string name="type" value="concrete"/>
 	</bsdf>
-	<bsdf type="twosided" id="mat-ituf_mdf" name="mat-ituf_mdf">
-		<bsdf type="principled" name="bsdf">
-			<rgb value="0.800955 0.293522 0.101689" name="base_color"/>
-			<rgb value="1.000000 1.000000 1.000000" name="spec_tint"/>
-			<float name="spec_trans" value="0.000000"/>
-			<float name="metallic" value="0.000000"/>
-			<float name="anisotropic" value="0.000000"/>
-			<float name="roughness" value="0.250000"/>
-			<float name="sheen" value="0.000000"/>
-			<rgb value="1.000000 1.000000 1.000000" name="sheen_tint"/>
-			<float name="clearcoat" value="0.000000"/>
-			<float name="clearcoat_gloss" value="0.000900"/>
-			<float name="specular" value="0.500000"/>
-		</bsdf>
+	<bsdf type="custom_mdf" id="mat-ituf_mdf" name="mat-ituf_mdf">
+		<string name="type" value="wood"/>
 	</bsdf>
-	<bsdf type="twosided" id="mat-ituf_metal" name="mat-ituf_metal">
-		<bsdf type="principled" name="bsdf">
-			<rgb value="0.075130 0.075130 0.075130" name="base_color"/>
-			<rgb value="1.000000 1.000000 1.000000" name="spec_tint"/>
-			<float name="spec_trans" value="0.000000"/>
-			<float name="metallic" value="0.000000"/>
-			<float name="anisotropic" value="0.000000"/>
-			<float name="roughness" value="0.250000"/>
-			<float name="sheen" value="0.000000"/>
-			<rgb value="1.000000 1.000000 1.000000" name="sheen_tint"/>
-			<float name="clearcoat" value="0.000000"/>
-			<float name="clearcoat_gloss" value="0.000900"/>
-			<float name="specular" value="0.500000"/>
-		</bsdf>
+	<bsdf type="custom_metal" id="mat-ituf_metal" name="mat-ituf_metal">
+		<string name="type" value="metal"/>
 	</bsdf>
-	<bsdf type="twosided" id="mat-ituf_glass" name="mat-ituf_glass">
-		<bsdf type="principled" name="bsdf">
-			<rgb value="0.035959 0.000000 1.000000" name="base_color"/>
-			<rgb value="1.000000 1.000000 1.000000" name="spec_tint"/>
-			<float name="spec_trans" value="0.000000"/>
-			<float name="metallic" value="0.000000"/>
-			<float name="anisotropic" value="0.000000"/>
-			<float name="roughness" value="0.250000"/>
-			<float name="sheen" value="0.000000"/>
-			<rgb value="1.000000 1.000000 1.000000" name="sheen_tint"/>
-			<float name="clearcoat" value="0.000000"/>
-			<float name="clearcoat_gloss" value="0.000900"/>
-			<float name="specular" value="0.500000"/>
-		</bsdf>
+	<bsdf type="custom_glass" id="mat-ituf_glass" name="mat-ituf_glass">
+		<string name="type" value="glass"/>
 	</bsdf>
-	<bsdf type="twosided" id="mat-ituf_polystyrene" name="mat-ituf_polystyrene">
-		<bsdf type="principled" name="bsdf">
-			<rgb value="0.800000 0.800000 0.800000" name="base_color"/>
-			<rgb value="1.000000 1.000000 1.000000" name="spec_tint"/>
-			<float name="spec_trans" value="0.000000"/>
-			<float name="metallic" value="0.000000"/>
-			<float name="anisotropic" value="0.000000"/>
-			<float name="roughness" value="0.250000"/>
-			<float name="sheen" value="0.000000"/>
-			<rgb value="1.000000 1.000000 1.000000" name="sheen_tint"/>
-			<float name="clearcoat" value="0.000000"/>
-			<float name="clearcoat_gloss" value="0.000900"/>
-			<float name="specular" value="0.500000"/>
-		</bsdf>
+	<bsdf type="custom_polystyrene" id="mat-ituf_polystyrene" name="mat-ituf_polystyrene">
+		<string name="type" value="ceiling_board"/>
 	</bsdf>
 
 <!-- Emitters -->
