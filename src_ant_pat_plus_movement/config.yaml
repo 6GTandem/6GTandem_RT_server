@@ -35,9 +35,9 @@ ue_locations_config:
   num_locations_zone1: 2000 #3000 #other locations are computed based on area
  # total number will be ~ num_locations_zone1 * 1.712 + N_RUs*N_stripes
 paths:
-  basepath: "/home/dramco_spark/6GTandem_RT_server/datasets_rad_pat_debug"
-  scenepath: "/home/dramco_spark/6GTandem_RT_server/6G_Tandem_kantoorruimte_v10/office_space.xml"
-  antenna_rad_path: "/home/dramco_spark/6GTandem_RT_server/antenna_patterns"
+  basepath: "./datasets_rad_pat_debug"
+  scenepath: "./6G_Tandem_kantoorruimte_v10/office_space.xml"
+  antenna_rad_path: "./antenna_patterns"
 
 
 random_configs:

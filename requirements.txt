@@ -20,7 +20,7 @@ decorator==5.2.1
 distributed==2025.11.0
 donfig==0.8.1.post1
 # Editable install with no version control (drjit==1.2.0)
--e /home/dramco_spark/mitsuba3/ext/drjit
+-e ./mitsuba3/ext/drjit
 executing==2.2.1
 flatbuffers==25.9.23
 flox==0.10.7
@@ -58,12 +58,12 @@ matplotlib==3.10.8
 matplotlib-inline==0.2.1
 mdurl==0.1.2
 # Editable install with no version control (mitsuba==3.7.1)
--e /home/dramco_spark/mitsuba3
+-e ./mitsuba3
 ml_dtypes==0.5.4
 msgpack==1.1.2
 namex==0.1.0
 # Editable install with no version control (nanobind==2.9.2)
--e /home/dramco_spark/mitsuba3/ext/nanobind
+-e ./mitsuba3/ext/nanobind
 narwhals==2.13.0
 nc-time-axis==1.4.1
 netCDF4==1.7.3
