@@ -5,9 +5,10 @@ import time
 import tensorflow as tf
 import matplotlib.pyplot as plt
 import xarray as xr
+import drjit as dr
+import mitsuba as mi
 import numpy as np
 from tqdm import tqdm
-import os
 import pandas as pd
 from scipy.interpolate import RegularGridInterpolator
 from scipy.constants import speed_of_light
@@ -32,12 +33,11 @@ def setup():
     if gpus:
         # Restrict TensorFlow to only use the first GPU
         try:
-            # tf.config.set_visible_devices(gpus[0], 'GPU') # only use the first GPU
+            # tf.config.set_visible_devices(gpus[1], 'GPU') # only use the first GPU
             # logical_gpus = tf.config.list_logical_devices('GPU')
             # logger.info("%d Physical GPUs, %d Logical GPUs", len(gpus), len(logical_gpus))
-            # logger.info("Using GPU: %s", gpus[0].name)
             logger.info("Using GPU: %s", gpus)
-
+            
         except RuntimeError as e:
             # Visible devices must be set before GPUs have been initialized
             logger.info(e)
@@ -74,15 +74,15 @@ def set_materials(scene, config):
     logger.info(glass_objects.radio_material.name)
     logger.info(glass_objects.radio_material.frequency_update_callback)
 
-    # no-name-2 => ituf_concrete
+    # no-name-2 =>ituf_metal
     concrete_objects = scene.get("no-name-2")
-    concrete_objects.radio_material.frequency_update_callback = ituf_concrete_callback
+    concrete_objects.radio_material.frequency_update_callback = ituf_metal_callback
     logger.info(concrete_objects.radio_material.name)
     logger.info(concrete_objects.radio_material.frequency_update_callback)
 
-    # no-name-3 => ituf_metal
+    # no-name-3 =>  ituf_concrete
     metal_objects = scene.get("no-name-3")
-    metal_objects.radio_material.frequency_update_callback = ituf_metal_callback
+    metal_objects.radio_material.frequency_update_callback = ituf_concrete_callback
     logger.info(metal_objects.radio_material.name)
     logger.info(metal_objects.radio_material.frequency_update_callback)
 
@@ -108,6 +108,81 @@ def set_materials(scene, config):
             logger.info(f"Relative permittivity: {value.radio_material.relative_permittivity.numpy()}")
             logger.info(f"Scattering coefficient: {value.radio_material.scattering_coefficient.numpy()}")
             logger.info(f"XPD coefficient: {value.radio_material.xpd_coefficient.numpy()}")
+
+def sph_to_cart(theta, phi):
+    x = np.sin(theta) * np.cos(phi)
+    y = np.sin(theta) * np.sin(phi)
+    z = np.cos(theta)
+    return np.array([x, y, z])
+
+def rotation_matrix(angles):
+    """
+    Computes the rotation matrix from ZYX Euler angles.
+
+    Parameters
+    ----------
+    angles : array-like of shape (3,)
+        Rotation angles [alpha, beta, gamma] in radians.
+        alpha : rotation about Z
+        beta  : rotation about Y
+        gamma : rotation about X
+
+    Returns
+    -------
+    rot_mat : ndarray of shape (3, 3)
+        Rotation matrix.
+    """
+
+    a, b, c = angles  # alpha, beta, gamma
+
+    sin_a, cos_a = np.sin(a), np.cos(a)
+    sin_b, cos_b = np.sin(b), np.cos(b)
+    sin_c, cos_c = np.sin(c), np.cos(c)
+
+    r_11 = cos_a * cos_b
+    r_12 = cos_a * sin_b * sin_c - sin_a * cos_c
+    r_13 = cos_a * sin_b * cos_c + sin_a * sin_c
+
+    r_21 = sin_a * cos_b
+    r_22 = sin_a * sin_b * sin_c + cos_a * cos_c
+    r_23 = sin_a * sin_b * cos_c - cos_a * sin_c
+
+    r_31 = -sin_b
+    r_32 = cos_b * sin_c
+    r_33 = cos_b * cos_c
+
+    rot_mat = np.array([
+        [r_11, r_12, r_13],
+        [r_21, r_22, r_23],
+        [r_31, r_32, r_33]
+    ])
+
+    return rot_mat
+
+
+def cart_to_sph(v):
+    # v is the (3, N) matrix, where N is the number of rays
+    x, y, z = v[0, :], v[1, :], v[2, :]
+    
+    # FIX: Calculate the norm for each ray (column) along axis 0.
+    r = np.linalg.norm(v, axis=0) # <--- THIS IS CRITICAL AND MUST BE IN YOUR CODE
+    
+    z_over_r = np.clip(z / r, -1.0, 1.0)
+    theta = np.arccos(z_over_r)
+    phi = np.arctan2(y, x)
+    
+    # We apply the phi wrap here for proper [0, 2pi] indexing
+    phi = np.where(phi < 0, phi + 2 * np.pi, phi) 
+    
+    return theta, phi
+
+def adjust_angles(theta, phi):
+    v = sph_to_cart(theta, phi)
+    rot_mat = rotation_matrix(np.array([0, -dr.pi/2, 0])) #rotate_z_to_x(v)
+    v_rot = rot_mat @ v
+    theta_r, phi_r = cart_to_sph(v_rot)
+
+    return theta_r, phi_r
 
 """ custom patterns for sionna based on measurements """
 # antenna pattern based on measurements
@@ -164,6 +239,9 @@ class MeasuredPattern(AntennaPattern):
             theta_np = theta.numpy()
             phi_np = phi.numpy()
 
+            # adjust radiation pattern orientation (pointing in z direction to pointing in x direction)
+            theta_np, phi_np = adjust_angles(theta_np, phi_np) 
+
             # Stack and interpolate
             pts = np.stack([theta_np, phi_np], axis=-1)
             field_np = self._interp(pts)
@@ -192,7 +270,7 @@ if __name__ == "__main__":
 
     # Configure logging
     log_time = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-    log_filename = f"gpu_1_run_{log_time}.log"
+    log_filename = f"gpu_2_run_{log_time}.log"
     logging.basicConfig(
         filename=log_filename,              # Log file name
         filemode='a',                    # Append mode
@@ -296,7 +374,7 @@ if __name__ == "__main__":
     
     # loop over al ue postions
     split_point = 1500 # process only a subset 
-    for ue_idx in range(min(split_point, ds_users.dims['user'])):
+    for ue_idx in range(0, split_point):
     #for ue_idx in range(ds_users.dims['user']):
         # output file location
         out_file = os.path.join(channel_output_path, f"channels_thz_ue_{ue_idx}.nc")
@@ -344,6 +422,8 @@ if __name__ == "__main__":
                                         num_cols=1,
                                         pattern=f"custom_measured_element_{ue_ant_idx+1}",
                                         polarization=config['antenna_config']['polarization'])
+            # scene.rx_array.antenna_pattern.show()
+            # plt.savefig(f"rx_array_custom_measured_element_{ue_ant_idx+1}")
             
             #print(f'ue_ant_idx: {ue_ant_idx}, pattern: {scene.rx_array._antenna_pattern.__dict__}')
 
@@ -374,6 +454,9 @@ if __name__ == "__main__":
                                             num_cols=1,
                                             pattern=f"custom_measured_element_{ru_ant_idx+1}",
                                             polarization=config['antenna_config']['polarization'])
+
+                # scene.tx_array.antenna_pattern.show()
+                # plt.savefig(f"tx_array_custom_measured_element_{ru_ant_idx+1}")
                 #print(f'ru_ant_idx: {ru_ant_idx}, pattern: {scene.tx_array._antenna_pattern.__dict__}')
 
                 # loop over all stripes
@@ -441,7 +524,6 @@ if __name__ == "__main__":
                         # saving results
                         for i_in_batch, RU_idx in enumerate(ru_idx_list):
                             global_idx = stripe_idx * N_RUs + RU_idx # tx_idx in old (unbatched) code
-                            # todo check if ok
                             channel_tensor[global_idx, ue_ant_idx, ru_ant_idx , :] = h_freq[i_in_batch] # store into channel tensor
                             stripe_idx_arr[global_idx] = stripe_idx
                             ru_idx_arr[global_idx]     = RU_idx
@@ -501,7 +583,7 @@ if __name__ == "__main__":
         t_end_ue = time.time()
         time_1_user = t_end_ue - t_start_ue
         logger.info(f"Finished processing UE {ue_idx}/{min(split_point, ds_users.dims['user'])} in {time_1_user:.2f} seconds")
-        logger.info(f"Estimated time left (h): {(time_1_user * (min(split_point, ds_users.dims['user']) - ue_idx - 1)) / 3600:.2f} hours")
+        logger.info(f"=====================> Estimated time left (h): {(time_1_user * (ds_users.dims['user'] - ue_idx - 1)) / 3600:.2f} hours")
 
     pynvml.nvmlShutdown()
 

@@ -35,7 +35,7 @@ ue_locations_config:
   num_locations_zone1: 2000 #3000 #other locations are computed based on area
  # total number will be ~ num_locations_zone1 * 1.712 + N_RUs*N_stripes
 paths:
-  basepath: "/home/user/6GTandem_RT_server/datasets_rad_pat_debug"
+  basepath: "/home/user/6GTandem_RT_server/datasets_rad_pat_debug_measured"
   scenepath: "/home/user/6GTandem_RT_server/6G_Tandem_kantoorruimte_v10/office_space.xml"
   antenna_rad_path: "/home/user/6GTandem_RT_server/antenna_patterns"
 
@@ -44,4 +44,4 @@ random_configs:
   intermediate_renders: False # intermediatelly render the scene
   ue_orientation: 'up' #ue array is pointed upward (not used just as FYI)
   RU_orientation: 'down' #ru array is pointed downward (not used just as FYI)
-  batch_size: 5 #number of RUs to process in parallel (depends on RAM/GPU memory)
+  batch_size: 4 #number of RUs to process in parallel (depends on RAM/GPU memory)
