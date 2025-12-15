@@ -16,6 +16,8 @@ import datetime
 import mitsuba as mi
 from sionna.rt import ITURadioMaterial
 
+logger = logging.getLogger(__name__)
+
 # For the custom materials, use an ITU material and change its callback.
 def custom_mat(props, callback):
     itu_material = ITURadioMaterial(props=props)
@@ -135,9 +137,6 @@ if __name__ == "__main__":
         level=logging.INFO,              # Set to DEBUG for more verbosity
         format='%(asctime)s - %(levelname)s - %(message)s'
     )
-
-    logger = logging.getLogger(__name__)
-
     # also see logs in the console
     console_handler = logging.StreamHandler()
     console_handler.setLevel(logging.INFO)
