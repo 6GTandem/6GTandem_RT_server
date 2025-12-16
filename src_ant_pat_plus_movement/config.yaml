@@ -1,6 +1,6 @@
 stripe_config: 
   N_RUs: 20 #per stripe (20)
-  N_stripes: 6 #6 
+  N_stripes: 8 #6 
   space_between_RUs: 1 #m
   space_between_stripes: 1 #m
   stripe_start_pos: [2, 2.5, 3.5] #x,y,z
@@ -8,7 +8,7 @@ stripe_config:
 
 antenna_config: 
   N_antennas: 4
-  pattern: 'iso'#'measured'
+  pattern: 'tr38901'
   polarization: 'V'
 
 subTHz_config:
@@ -44,4 +44,4 @@ random_configs:
   intermediate_renders: False # intermediatelly render the scene
   ue_orientation: 'up' #ue array is pointed upward (not used just as FYI)
   RU_orientation: 'down' #ru array is pointed downward (not used just as FYI)
-  batch_size: 120 #number of RUs to process in parallel (depends on RAM/GPU memory)
+  batch_size: 160 #number of RUs to process in parallel (depends on RAM/GPU memory)
