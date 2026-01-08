@@ -38,11 +38,6 @@ def ituf_mdf_callback(f_hz):
   conductivity = c*np.power(f_ghz, d)
   return (relative_permittivity, conductivity)
 
-def load_config(path='/home/user/6GTandem_RT_server/src/config.yaml'):
-    with open(path, 'r') as file:
-        config = yaml.safe_load(file)
-    return config
-
 def create_folder(folder_path):
     """
     Creates a folder at the specified path if it doesn't already exist.
