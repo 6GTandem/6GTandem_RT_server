@@ -1,0 +1,81 @@
+stripe_config: 
+  N_RUs: 11 # Per stripe.
+  N_stripes: 3
+  space_between_RUs: 1 #m
+  space_between_stripes: 3 #m
+  stripe_direction: "y"
+  stripe_start_pos: [1.4, 59.69, 25.5] #x,y,z
+  stripe_end_pos: [1.4, 69.6399, 24.5]
+  # Direction along which the antennas of the array are placed.
+  # Developer note: The array is placed along the y-axis by default.
+  array_direction: 'y'
+
+antenna_config: 
+  N_antennas: 4
+  pattern: 'tr38901'
+  polarization: 'V'
+
+subTHz_config:
+  fc: 157.75e+9 
+  bw: 3.0e+9 #6.0e+9 
+  num_subcarriers: 4096 #1024
+  doppler: False # todo add
+
+sub10GHz_config:
+  fc: 3.5e+9 
+  bw: 20.0e+6 
+  num_subcarriers: 1024 
+  N_sub10GHz_antennas: 2 # per direction (V and H) => 2x2 array
+  num_APs : 4 # number of APs in the scene
+  pattern: 'iso'
+  polarization: 'V'
+  ap_pos_ceil_1: [5.25, 7.25, 3.5] # xyz
+  ap_pos_ceil_2: [5.25, 18.25, 3.5] # xyz
+  ap_pos_wall_1: [2, 13, 2.5] # xyz
+  ap_pos_wall_2: [5.25, 23.5, 2.5] # xyz
+
+
+ue_locations_config:
+  zones:
+    zone1:
+      bounds: [0.849, 7.785, 59.59, 62.9, 12.83, 14.83]
+      steps: [0.2, 0.8, 0.5]
+      rows: 5
+      cols: 31
+    zone2:
+      bounds: [1, 7.892, 60.0, 63.33, 13.08, 15.08]
+      steps: [0.2, 0.8, 0.5]
+      rows: 5
+      cols: 31
+    zone3:
+      bounds: [0.849, 8.145, 63.75, 67.06, 15.33, 17.33]
+      steps: [0.2, 0.8, 0.5]
+      rows: 5
+      cols: 31
+    zone4:
+      bounds: [1, 8.286, 64.15, 67.48, 15.58, 17.58]
+      steps: [0.2, 0.8, 0.5]
+      rows: 5
+      cols: 31
+
+
+paths:
+  basepath: "./datasets_rad_pat_debug"
+  scenepath: "./environments/arena/arena.xml"
+  antenna_rad_path: "./antenna_patterns"
+
+# Configuration used to render the scene for debugging. These parameters are the camera position and orientation.
+render_config:
+  position: [7, 35, 20]
+  orientation: [1.570796, 0, 0]
+
+# A dict of objects in the scene. These are used to avoid placing UEs at these locations.
+# Each defines 4 points enclosing the entire object. (x1, x2, y1, y2)
+objects:
+  none: [0, 0, 0, 0]
+
+random_configs:
+  intermediate_renders: False # intermediatelly render the scene
+  ue_orientation: 'up' #ue array is pointed upward (not used just as FYI)
+  RU_orientation: 'down' #ru array is pointed downward (not used just as FYI)
+  batch_size: 160 #number of RUs to process in parallel (depends on RAM/GPU memory)

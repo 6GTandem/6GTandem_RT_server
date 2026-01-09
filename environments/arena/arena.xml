@@ -1,0 +1,47 @@
+<scene version="2.1.0">
+
+<!-- Defaults, these can be set via the command line: -Darg=value -->
+
+
+<!-- Camera and Rendering Parameters -->
+
+	<integrator type="path" id="elm__0" name="elm__0">
+		<integer name="max_depth" value="12"/>
+	</integrator>
+
+<!-- Materials -->
+
+	<bsdf type="custom_concrete" id="mat-ituf_concrete" name="mat-ituf_concrete">
+		<string name="type" value="concrete"/>
+	</bsdf>
+	<bsdf type="custom_mdf" id="mat-ituf_mdf" name="mat-ituf_mdf">
+		<string name="type" value="wood"/>
+	</bsdf>
+	<bsdf type="custom_metal" id="mat-ituf_metal" name="mat-ituf_metal">
+		<string name="type" value="metal"/>
+	</bsdf>
+	<bsdf type="custom_glass" id="mat-ituf_glass" name="mat-ituf_glass">
+		<string name="type" value="glass"/>
+	</bsdf>
+	<bsdf type="custom_polystyrene" id="mat-ituf_polystyrene" name="mat-ituf_polystyrene">
+		<string name="type" value="ceiling_board"/>
+	</bsdf>
+
+<!-- Emitters -->
+
+
+<!-- Shapes -->
+
+	<shape type="ply" id="mesh-Plane" name="mesh-Plane">
+		<string name="filename" value="meshes/Plane.ply"/>
+		<ref id="mat-ituf_concrete" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Plane_006" name="mesh-Plane_006">
+		<string name="filename" value="meshes/Plane_006.ply"/>
+		<boolean name="face_normals" value="true"/>
+		<ref id="mat-ituf_concrete" name="bsdf"/>
+	</shape>
+
+<!-- Volumes -->
+
+</scene>

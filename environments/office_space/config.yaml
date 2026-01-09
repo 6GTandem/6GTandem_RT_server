@@ -4,9 +4,9 @@ stripe_config:
   space_between_RUs: 1 #m
   space_between_stripes: 1 #m
   stripe_direction: "y"
-  stripe_start_pos: [2.5, 2, 3.5] #x,y,z
-  stripe_end_pos: [2.5, 21, 3.5] #x,y,z
-  array_direction: 'x' # direction along which the antennas of the array are placed 'x' => perpendicular to stripe direction (y) note this argument is fixed! only 'x' is supported for now
+  stripe_start_pos: [2, 2.5, 3.5] #x,y,z
+  stripe_end_pos: [2, 21.5, 3.5] #x,y,z
+  array_direction: 'y'
 
 antenna_config: 
   N_antennas: 4
@@ -18,6 +18,11 @@ subTHz_config:
   bw: 3.0e+9 #6.0e+9 
   num_subcarriers: 4096 #1024
   doppler: False # todo add
+
+objects:
+  cabinet1: [1.06, 4.88, 4.19, 5.51]
+  cabinet2: [1.06, 4.88, 14.23, 15.58]
+  cabinet3: [1.06, 4.88, 24.27, 25.62]
 
 sub10GHz_config:
   fc: 3.5e+9 
@@ -34,8 +39,11 @@ sub10GHz_config:
 
 
 ue_locations_config:
-  num_locations: 2000 #3000 #other locations are computed based on area
- # total number will be ~ num_locations_zone1 * 1.712 + N_RUs*N_stripes
+  num_locations: 1000
+  ue_area: [1.08, 9.35, 1.88, 24.89] # Area in which to put UEs.
+  safety_offset: 0.1 # Stay 10 cm away from the walls.
+  z_height: 1.5 # Height at which to put the UEs.
+
 paths:
   basepath: "./datasets_rad_pat_debug"
   scenepath: "./environments/office_space/office_space.xml"
