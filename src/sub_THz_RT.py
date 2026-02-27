@@ -31,7 +31,7 @@ from sionna.rt import ITURadioMaterial
 
 logger = logging.getLogger(__name__)
 
-simulation_environment = "industry_hall"
+simulation_environment = "arena"
 
 # For the custom materials, use an ITU material and change its callback.
 def custom_mat(props, callback):
@@ -132,7 +132,7 @@ if __name__ == "__main__":
         num_rows=1,
         vertical_spacing=0.5,
         horizontal_spacing=0.5,
-        pattern="tr38901",
+        pattern=pattern,
         polarization=config["antenna_config"]["polarization"],
     )
 
@@ -142,7 +142,7 @@ if __name__ == "__main__":
         num_rows=1,
         vertical_spacing=0.5,
         horizontal_spacing=0.5,
-        pattern="tr38901",
+        pattern=pattern,
         polarization=config["antenna_config"]["polarization"],
     )
 
@@ -316,7 +316,6 @@ if __name__ == "__main__":
             "user_x": float(ds_users["x"][ue_idx]),
             "user_y": float(ds_users["y"][ue_idx]),
             "user_z": float(ds_users["z"][ue_idx]),
-            "zone": str(ds_users["zone"][ue_idx].values),
             "ue_stripe_idx": (
                 float(ds_users["ue_stripe_idx"][ue_idx]) if not np.isnan(ds_users["ue_stripe_idx"][ue_idx]) else "NaN"
             ),
