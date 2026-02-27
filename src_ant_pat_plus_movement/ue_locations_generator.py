@@ -36,7 +36,7 @@ def is_point_outside_zones(
     return True
 
 
-def create_user_location_dataset(config, logger):
+def create_user_location_dataset(config, logger, dataset_name):
     # coordinates of the general zone
     z_height = 1.5
     x_start = 1.08
@@ -110,10 +110,10 @@ def create_user_location_dataset(config, logger):
 
     # check if dataset already exists
     basepath = config['paths']['basepath']
-    dataset_path =  os.path.join(basepath, f'dataset_{nr_ue_locs}_ue_locations')
+    dataset_path =  os.path.join(basepath, dataset_name)
     ue_path = os.path.join(dataset_path, 'ue_locations')
     create_folder(ue_path)
-    file_name = os.path.join(ue_path, f"ue_locations_{nr_ue_locs}.nc")
+    file_name = os.path.join(ue_path, f"ue_locations.nc")
     if os.path.exists(file_name):    
         logger.info(f"Loading existing dataset from {file_name}")
         ds = xr.load_dataset(file_name)
@@ -210,11 +210,8 @@ def create_user_location_dataset(config, logger):
 
 
         # Save 
-        basepath = config['paths']['basepath']
-        dataset_path =  os.path.join(basepath, f'dataset_{nr_ue_locs}_ue_locations')
-        ue_path = os.path.join(dataset_path, 'ue_locations')
         create_folder(ue_path)
-        file_name = os.path.join(ue_path, f"ue_locations_{nr_ue_locs}.nc")
+        file_name = os.path.join(ue_path, f"ue_locations.nc")
         ds.to_netcdf(file_name)
         logger.info(f"Saved samples to {file_name}")
 

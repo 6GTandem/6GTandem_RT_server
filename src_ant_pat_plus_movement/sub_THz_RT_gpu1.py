@@ -87,7 +87,6 @@ if __name__ == "__main__":
     console_handler.setLevel(logging.INFO)
     formatter = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
     console_handler.setFormatter(formatter)
-    logger = logging.getLogger()
     logger.addHandler(console_handler)
 
     logger.info(f"Sionna version: {sionna.rt.__version__}")
@@ -111,7 +110,7 @@ if __name__ == "__main__":
         sionna.rt.register_antenna_pattern(f"custom_measured_element_{i}", measured_pattern_factory)
 
     # create or load user dataset
-    ds_users, dataset_path = create_user_location_dataset(config, logger)
+    ds_users, dataset_path = create_user_location_dataset(config, logger, "office1_measured")
 
     # set output path
     channel_output_path = os.path.join(dataset_path, "sub_thz_channels")
@@ -122,7 +121,7 @@ if __name__ == "__main__":
         "intermediate_renders"
     ]  # slows down the program a lot => only for debugging!!!
 
-    # load scene# Load scene
+    # load scene
     scene = load_scene(config["paths"]["scenepath"])
 
     # Check that the right custom materials are set.
@@ -234,8 +233,8 @@ if __name__ == "__main__":
             scene.rx_array = PlanarArray(
                 num_rows=1, num_cols=1, pattern=pattern, polarization=antenna_conf["polarization"]
             )
-            scene.rx_array.antenna_pattern.show()
-            plt.savefig(f"rx_array_custom_measured_element_{ue_ant_idx+1}")
+            #scene.rx_array.antenna_pattern.show()
+            #plt.savefig(f"rx_array_custom_measured_element_{ue_ant_idx+1}")
 
             # print(f'ue_ant_idx: {ue_ant_idx}, pattern: {scene.rx_array._antenna_pattern.__dict__}')
 
@@ -274,8 +273,8 @@ if __name__ == "__main__":
                     polarization=antenna_conf["polarization"],
                 )
 
-                scene.tx_array.antenna_pattern.show()
-                plt.savefig(f"tx_array_custom_measured_element_{ru_ant_idx+1}")
+                #scene.tx_array.antenna_pattern.show()
+                #plt.savefig(f"tx_array_custom_measured_element_{ru_ant_idx+1}")
                 # print(f'ru_ant_idx: {ru_ant_idx}, pattern: {scene.tx_array._antenna_pattern.__dict__}')
 
                 # loop over all stripes
@@ -364,7 +363,7 @@ if __name__ == "__main__":
 
         """ did one ue position """
 
-        # save channel tensor for curren ue
+        # save channel tensor for current ue
         # Get user attributes
         user_attrs = {
             "user_idx": int(ue_idx),
@@ -399,9 +398,7 @@ if __name__ == "__main__":
         # logging
         t_end_ue = time.time()
         time_1_user = t_end_ue - t_start_ue
-        logger.info(
-            f"Finished processing UE {ue_idx}/{min(split_point, ds_users.sizes['user'])} in {time_1_user:.2f} seconds"
-        )
+        logger.info(f"Finished processing UE {ue_idx}/{ds_users.sizes['user']} in {time_1_user:.2f} seconds")
         logger.info(
             f"=====================> Estimated time left (h): {(time_1_user * (ds_users.sizes['user'] - ue_idx - 1)) / 3600:.2f} hours"
         )

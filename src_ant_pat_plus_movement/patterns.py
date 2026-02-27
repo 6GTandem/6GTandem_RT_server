@@ -1,12 +1,13 @@
 import sionna.rt
-import numpy as np
+import cupy as np
 import pandas as pd
 import drjit as dr
 import mitsuba as mi
 
 from sionna.rt import AntennaPattern
-from scipy.interpolate import RegularGridInterpolator
+from cupyx.scipy.interpolate import RegularGridInterpolator
 from typing import Callable
+from drjit.auto import Array3f, Matrix3f
 
 
 def sph_to_cart(theta, phi):
@@ -16,7 +17,7 @@ def sph_to_cart(theta, phi):
     return np.array([x, y, z])
 
 
-def rotation_matrix(angles):
+def rotation_matrix(a, b, c):
     """
     Computes the rotation matrix from ZYX Euler angles.
 
@@ -33,8 +34,6 @@ def rotation_matrix(angles):
     rot_mat : ndarray of shape (3, 3)
         Rotation matrix.
     """
-
-    a, b, c = angles  # alpha, beta, gamma
 
     sin_a, cos_a = np.sin(a), np.cos(a)
     sin_b, cos_b = np.sin(b), np.cos(b)
@@ -76,8 +75,8 @@ def cart_to_sph(v):
 
 def adjust_angles(theta, phi):
     v = sph_to_cart(theta, phi)
-    rot_mat = rotation_matrix(np.array([0, -dr.pi / 2, 0]))  # rotate_z_to_x(v)
-    v_rot = rot_mat @ v
+    rot_mat = rotation_matrix(0, -np.pi / 2, 0)  # rotate_z_to_x(v)
+    v_rot = np.matmul(rot_mat, v)
     theta_r, phi_r = cart_to_sph(v_rot)
 
     return theta_r, phi_r
@@ -100,11 +99,11 @@ class MeasuredPattern(AntennaPattern):
         # ---- Load CSV ----
         self.path = csv_path
         df = pd.read_csv(csv_path)
-        phi_deg = df["Phi[deg]"].values  # degrees
-        theta_deg = df["Theta[deg]"].values  # degrees
-        mag = df["mag(rERHCP)[mV]"].values / 1000  # convert mV to V
+        phi_deg = np.array(df["Phi[deg]"].values)  # degrees
+        theta_deg = np.array(df["Theta[deg]"].values)  # degrees
+        mag = np.array(df["mag(rERHCP)[mV]"].values) / 1000  # convert mV to V
         # print(f'max mag in MeasuredPattern: {np.max(mag)*1000} mV')
-        ang_deg = df["ang_deg(rERHCP)[deg]"].values
+        ang_deg = np.array(df["ang_deg(rERHCP)[deg]"].values)
 
         # ---- Convert to radians and complex field ----
         phi = np.deg2rad(phi_deg)
@@ -132,16 +131,14 @@ class MeasuredPattern(AntennaPattern):
 
     @property
     def patterns(self):
-        def f(theta, phi):
-            # Convert TF tensors to numpy arrays for interpolation
-            theta_np = theta.numpy()
-            phi_np = phi.numpy()
-
+        def f(theta: mi.Float, phi: mi.Float):
+            theta_np = np.array(theta.numpy())
+            phi_np = np.array(phi.numpy())
             # adjust radiation pattern orientation (pointing in z direction to pointing in x direction)
-            theta_np, phi_np = adjust_angles(theta_np, phi_np)
+            theta_adj, phi_adj = adjust_angles(theta_np, phi_np)
 
             # Stack and interpolate
-            pts = np.stack([theta_np, phi_np], axis=-1)
+            pts = np.stack([theta_adj, phi_adj], axis=-1)
             field_np = self._interp(pts)
 
             field_np = np.asarray(field_np, dtype=np.complex64)
