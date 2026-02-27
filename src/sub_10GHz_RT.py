@@ -1,97 +1,79 @@
 import sionna.rt
 import time
-import tensorflow as tf
-import matplotlib.pyplot as plt
 import xarray as xr
 import numpy as np
-from tqdm import tqdm
+import mitsuba as mi
 import os
-from sionna.rt import load_scene, AntennaArray, PlanarArray, Transmitter, Receiver, Camera,\
-                      PathSolver, RadioMapSolver, subcarrier_frequencies
+import yaml
+from sionna.rt import load_scene,  PlanarArray, Transmitter, Receiver, Camera,\
+                      PathSolver, subcarrier_frequencies, ITURadioMaterial
 from utils import ituf_glass_callback, ituf_concrete_callback, ituf_metal_callback, \
-                  ituf_polystyrene_callback, ituf_mdf_callback, load_config, create_folder
+                  ituf_polystyrene_callback, ituf_mdf_callback, create_folder
 from ue_locations_generator import create_user_location_dataset
 import logging
 import datetime
 
-def setup():
-    # check versions and set up GPU
-    logger.info(f"Sionna version: {sionna.rt.__version__}" )
-    logger.info("ftf version: {tf.__version__}")
-    gpus = tf.config.list_physical_devices('GPU')
-    logger.info("GPU:", gpus)
-    if gpus:
-        # Restrict TensorFlow to only use the first GPU
-        try:
-            tf.config.set_visible_devices(gpus[0], 'GPU') # only use the first GPU
-            logical_gpus = tf.config.list_logical_devices('GPU')
-            logger.info(len(gpus), "Physical GPUs,", len(logical_gpus), "Logical GPU")
-            logger.info("Using GPU:", gpus[0].name)
-        except RuntimeError as e:
-            # Visible devices must be set before GPUs have been initialized
-            logger.info(e)
+simulation_environment = "office_space"
+
+logger = logging.getLogger(__name__)
+
+def format_seconds_to_h_m(total_seconds):
+    """Converts total seconds into a string formatted as 'Hh Mm s'."""
+    if total_seconds < 0:
+        total_seconds = 0
+    # Calculate hours and remaining seconds
+    hours = int(total_seconds // 3600)
+    remaining_seconds = total_seconds % 3600
+    # Calculate minutes and final seconds
+    minutes = int(remaining_seconds // 60)
+    seconds = int(remaining_seconds % 60)
+    
+    if hours > 0:
+        return f"{hours}h {minutes}m {seconds}s"
+    elif minutes > 0:
+        return f"{minutes}m {seconds}s"
     else:
-        logger.info("No GPU found, using CPU.")
+        # Show higher precision if time is very short
+        return f"{total_seconds:.2f}s"
 
-def set_materials(scene, config):
-    # check which materials are available in the scene
-    logger.info("Available materials:")
-    for name, obj in scene.objects.items():
-        logger.info(f'{name:<15}{obj.radio_material.name}')
+# For the custom materials, use an ITU material and change its callback.
+def custom_mat(props, callback):
+    itu_material = ITURadioMaterial(props=props)
+    itu_material.frequency_update_callback = callback
 
-    # set materials for the scene
-    # add callbacks to the materials
-    logger.info("radio materials with associated callbacks:")
-    # Ceiling_Detail => polystyrene
-    ceiling_object = scene.get("Ceiling_Detail")
-    ceiling_object.radio_material.frequency_update_callback = ituf_polystyrene_callback
-    logger.info(ceiling_object.radio_material.name)
-    logger.info(ceiling_object.radio_material.frequency_update_callback)
+    return itu_material
 
-    # no-name-1 => ituf_glass
-    glass_objects = scene.get("no-name-1")
-    glass_objects.radio_material.frequency_update_callback = ituf_glass_callback
-    logger.info(glass_objects.radio_material.name)
-    logger.info(glass_objects.radio_material.frequency_update_callback)
 
-    # no-name-2 => ituf_concrete
-    concrete_objects = scene.get("no-name-2")
-    concrete_objects.radio_material.frequency_update_callback = ituf_concrete_callback
-    logger.info(concrete_objects.radio_material.name)
-    logger.info(concrete_objects.radio_material.frequency_update_callback)
+# Custom material BSDFs. These must match with the BSDF names in the .xml file.
+# In the XML file the BSDF material must have a <string name="type" value="glass"/>
+# where value is an existing ITU material.
+mi.register_bsdf("custom_glass", lambda props: custom_mat(props, ituf_glass_callback))
+mi.register_bsdf("custom_polystyrene", lambda props: custom_mat(props, ituf_polystyrene_callback))
+mi.register_bsdf("custom_concrete", lambda props: custom_mat(props, ituf_concrete_callback))
+mi.register_bsdf("custom_mdf", lambda props: custom_mat(props, ituf_mdf_callback))
+mi.register_bsdf("custom_metal", lambda props: custom_mat(props, ituf_metal_callback))
 
-    # no-name-3 => ituf_metal
-    metal_objects = scene.get("no-name-3")
-    metal_objects.radio_material.frequency_update_callback = ituf_metal_callback
-    logger.info(metal_objects.radio_material.name)
-    logger.info(metal_objects.radio_material.frequency_update_callback)
 
-    # no-name-4 => ituf_mdf
-    metal_mdf = scene.get("no-name-4")
-    metal_mdf.radio_material.frequency_update_callback = ituf_mdf_callback
-    logger.info(metal_mdf.radio_material.name)
-    logger.info(metal_mdf.radio_material.frequency_update_callback)
-
+def check_materials(config, scene):
     # check conductivity and relative permittivity at different frequencies
     # loop through material names and print them
-    sub_GHz = config['sub10GHz_config']['fc']
-    sub_THz = config['subTHz_config']['fc']
-    logger.info(f"Checking materials at {sub_GHz/1e9} GHz and {sub_THz/1e9} GHz")
+    sub_GHz = config["sub10GHz_config"]["fc"]
+    sub_THz = config["subTHz_config"]["fc"]
+    logger.info(f"Checking materials at {sub_GHz / 1e9} GHz and {sub_THz / 1e9} GHz")
     for key, value in scene.objects.items():
-        logger.info(f'---------------{key=}----------------')
+        logger.info(f"---------------{key=}----------------")
         # Print name of assigned radio material for different frequenies
-        for f in [sub_GHz, sub_THz]: # Print for differrent frequencies
+        for f in [sub_GHz, sub_THz]:  # Print for differrent frequencies
             scene.frequency = f
-            value.radio_material.frequency_update() # update the frequency of the objects
-            logger.info(f"\nRadioMaterial: {value.radio_material.name} at {scene.frequency/1e9} GHz")
+            value.radio_material.frequency_update()  # update the frequency of the objects
+            logger.info(f"\nRadioMaterial: {value.radio_material.name} at {scene.frequency[0] / 1e9} GHz")
             logger.info(f"Conductivity: {value.radio_material.conductivity.numpy()}")
             logger.info(f"Relative permittivity: {value.radio_material.relative_permittivity.numpy()}")
             logger.info(f"Scattering coefficient: {value.radio_material.scattering_coefficient.numpy()}")
-            logger.info(f"XPD coefficient: {value.radio_material.xpd_coefficient.numpy()}")
+            logger.info(f"XPD coefficient: {value.radio_material.xpd_coefficient.numpy()}") 
 
 
 if __name__ == "__main__":
-
     # Configure logging
     log_time = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
     log_filename = f"sub10_run_{log_time}.log"
@@ -102,8 +84,6 @@ if __name__ == "__main__":
         format='%(asctime)s - %(levelname)s - %(message)s'
     )
 
-    logger = logging.getLogger(__name__)
-
     # also see logs in the console
     console_handler = logging.StreamHandler()
     console_handler.setLevel(logging.INFO)
@@ -112,14 +92,16 @@ if __name__ == "__main__":
     logger = logging.getLogger()
     logger.addHandler(console_handler)
 
-    # check versions and set up GPU
-    setup()
+    logger.info(f"Sionna version: {sionna.rt.__version__}" )
 
-    # load config file
-    config = load_config()
+    # Load config file.
+    with open(f"environments/{simulation_environment}/config.yaml", 'r') as file:
+        config = yaml.safe_load(file)
+    logging.info(f"Config loaded: {config}")
 
-    # create or load user dataset
-    ds_users, dataset_path = create_user_location_dataset(config, logger)
+    basepath = config["paths"]["basepath"]
+    dataset_path = os.path.join(basepath, simulation_environment)
+    ds_users = xr.load_dataset(f"{basepath}/{simulation_environment}/ue_locations/ue_locations.nc")
 
     # set output path
     channel_output_path = os.path.join(dataset_path, 'sub_10ghz_channels')
@@ -131,6 +113,8 @@ if __name__ == "__main__":
     # load scene# Load scene
     scene = load_scene(config['paths']['scenepath']) 
 
+    check_materials(config, scene)
+
     # preview scene 
     # Create new camera with different configuration
     my_cam = Camera(position=[9,35,0.5], look_at=[0,0,3])
@@ -139,27 +123,24 @@ if __name__ == "__main__":
     if intermediate_reders:
         scene.render_to_file(camera=my_cam, filename='empty_scene.png', resolution=[650, 500], num_samples=512, clip_at=20) # Increase num_samples to increase image quality
 
-    # set materials for the scene
-    set_materials(scene, config)
-
     # configure tx and rx arrays
-    N_antennas = config['antenna_config']['N_antennas_per_axis']
-    logger.info(f'number antennas per axis: {N_antennas}')
+    N_antennas = config['sub10GHz_config']['N_sub10GHz_antennas']
+    logger.info(f'number antennas per axis: {N_antennas}, antenna pattern: {config["sub10GHz_config"]["pattern"]}, polarization: {config["sub10GHz_config"]["polarization"]} ')
 
     scene.tx_array = PlanarArray(num_rows=N_antennas,
                                 num_cols=N_antennas,
                                 vertical_spacing=0.5,
                                 horizontal_spacing=0.5,
-                                pattern=config['antenna_config']['pattern'],
-                                polarization=config['antenna_config']['polarization'])
+                                pattern=config['sub10GHz_config']['pattern'],
+                                polarization=config['sub10GHz_config']['polarization'])
 
     # Configure antenna array for all receivers
     scene.rx_array = PlanarArray(num_rows=N_antennas,
                                 num_cols=N_antennas,
                                 vertical_spacing=0.5,
                                 horizontal_spacing=0.5,
-                                pattern=config['antenna_config']['pattern'],
-                                polarization=config['antenna_config']['polarization'])
+                                pattern=config['sub10GHz_config']['pattern'],
+                                polarization=config['sub10GHz_config']['polarization'])
     
     
 
@@ -226,7 +207,7 @@ if __name__ == "__main__":
         print(f'tx orientation: {tx.orientation}')
     
     # loop over al ue postions
-    for ue_idx in range(ds_users.dims['user']):
+    for ue_idx in range(ds_users.sizes['user']):
         # output file location
         out_file = os.path.join(channel_output_path, f"channels_sub10ghz_ue_{ue_idx}.nc")
         if os.path.exists(out_file):
@@ -258,7 +239,7 @@ if __name__ == "__main__":
 
         # Preallocate channel tensor for APs and index arrays (2x N^2 because cross polarization)
         channel_tensor = np.empty(
-            (N_APS, 2*N_antennas**2, 2*N_antennas**2, num_subcarriers),
+            (N_APS, 2*N_antennas, 2*N_antennas, num_subcarriers),
             dtype=np.complex64
         ) 
 
@@ -302,7 +283,21 @@ if __name__ == "__main__":
         
         # logging
         t_end_ue = time.time()
-        logger.info(f"Finished processing UE {ue_idx}/{ds_users.dims['user']} in {t_end_ue-t_start_ue:.2f} seconds - estimated time remaining: {((ds_users.dims['user'] - ue_idx - 1) * (t_end_ue-t_start_ue)):.2f} seconds")
+
+        # Calculate times
+        time_elapsed_ue = t_end_ue - t_start_ue
+        remaining_users = ds_users.sizes['user'] - ue_idx - 1
+        time_remaining_total_s = remaining_users * time_elapsed_ue
+        
+        # Format times
+        time_elapsed_formatted = format_seconds_to_h_m(time_elapsed_ue)
+        time_remaining_formatted = format_seconds_to_h_m(time_remaining_total_s)
+
+        logger.info(
+                    f"Finished processing UE {ue_idx}/{ds_users.sizes['user']} "
+                    f"in {time_elapsed_formatted} - "
+                    f"estimated time remaining: {time_remaining_formatted}"
+                )
 
         # save channel tensor for curren ue
         # Get user attributes
@@ -333,8 +328,8 @@ if __name__ == "__main__":
             },
             coords={
                 "ap": ap_names,
-                "rx_ant": np.arange(2*N_antennas**2),
-                "tx_ant": np.arange(2*N_antennas**2),
+                "rx_ant": np.arange(2*N_antennas),
+                "tx_ant": np.arange(2*N_antennas),
                 "subcarrier": np.arange(num_subcarriers),
             },
             attrs=user_attrs
