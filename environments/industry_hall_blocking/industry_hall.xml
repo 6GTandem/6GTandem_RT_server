@@ -1,0 +1,203 @@
+<scene version="2.1.0">
+
+<!-- Defaults, these can be set via the command line: -Darg=value -->
+
+
+<!-- Camera and Rendering Parameters -->
+
+	<integrator type="path" id="elm__0" name="elm__0">
+		<integer name="max_depth" value="12"/>
+	</integrator>
+
+<!-- Materials -->
+
+	<bsdf type="custom_concrete" id="mat-ituf_concrete" name="mat-ituf_concrete">
+		<string name="type" value="concrete"/>
+	</bsdf>
+	<bsdf type="custom_mdf" id="mat-ituf_mdf" name="mat-ituf_mdf">
+		<string name="type" value="wood"/>
+	</bsdf>
+	<bsdf type="custom_metal" id="mat-ituf_metal" name="mat-ituf_metal">
+		<string name="type" value="metal"/>
+	</bsdf>
+	<bsdf type="custom_glass" id="mat-ituf_glass" name="mat-ituf_glass">
+		<string name="type" value="glass"/>
+	</bsdf>
+	<bsdf type="custom_polystyrene" id="mat-ituf_polystyrene" name="mat-ituf_polystyrene">
+		<string name="type" value="ceiling_board"/>
+	</bsdf>
+
+<!-- Emitters -->
+
+
+<!-- Shapes -->
+
+	<shape type="ply" id="mesh-Plane_015" name="mesh-Plane_015">
+		<string name="filename" value="meshes/Plane_015.ply"/>
+		<boolean name="face_normals" value="true"/>
+		<ref id="mat-ituf_metal" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Plane_016" name="mesh-Plane_016">
+		<string name="filename" value="meshes/Plane_016.ply"/>
+		<boolean name="face_normals" value="true"/>
+		<ref id="mat-ituf_metal" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Plane_017" name="mesh-Plane_017">
+		<string name="filename" value="meshes/Plane_017.ply"/>
+		<boolean name="face_normals" value="true"/>
+		<ref id="mat-ituf_metal" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Plane_019" name="mesh-Plane_019">
+		<string name="filename" value="meshes/Plane_019.ply"/>
+		<boolean name="face_normals" value="true"/>
+		<ref id="mat-ituf_metal" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Plane_020" name="mesh-Plane_020">
+		<string name="filename" value="meshes/Plane_020.ply"/>
+		<boolean name="face_normals" value="true"/>
+		<ref id="mat-ituf_metal" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Plane_021" name="mesh-Plane_021">
+		<string name="filename" value="meshes/Plane_021.ply"/>
+		<boolean name="face_normals" value="true"/>
+		<ref id="mat-ituf_metal" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Plane_022" name="mesh-Plane_022">
+		<string name="filename" value="meshes/Plane_022.ply"/>
+		<boolean name="face_normals" value="true"/>
+		<ref id="mat-ituf_metal" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Plane_023" name="mesh-Plane_023">
+		<string name="filename" value="meshes/Plane_023.ply"/>
+		<boolean name="face_normals" value="true"/>
+		<ref id="mat-ituf_metal" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Plane_024" name="mesh-Plane_024">
+		<string name="filename" value="meshes/Plane_024.ply"/>
+		<boolean name="face_normals" value="true"/>
+		<ref id="mat-ituf_metal" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Cube_003" name="mesh-Cube_003">
+		<string name="filename" value="meshes/Cube_003.ply"/>
+		<boolean name="face_normals" value="true"/>
+		<ref id="mat-ituf_metal" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Cube_004" name="mesh-Cube_004">
+		<string name="filename" value="meshes/Cube_004.ply"/>
+		<boolean name="face_normals" value="true"/>
+		<ref id="mat-ituf_metal" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Plane_026" name="mesh-Plane_026">
+		<string name="filename" value="meshes/Plane_026.ply"/>
+		<boolean name="face_normals" value="true"/>
+		<ref id="mat-ituf_metal" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Plane_001" name="mesh-Plane_001">
+		<string name="filename" value="meshes/Plane_001.ply"/>
+		<boolean name="face_normals" value="true"/>
+		<ref id="mat-ituf_metal" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Cylinder" name="mesh-Cylinder">
+		<string name="filename" value="meshes/Cylinder.ply"/>
+		<boolean name="face_normals" value="true"/>
+		<ref id="mat-ituf_metal" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Cylinder_001" name="mesh-Cylinder_001">
+		<string name="filename" value="meshes/Cylinder_001.ply"/>
+		<boolean name="face_normals" value="true"/>
+		<ref id="mat-ituf_metal" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Plane_002" name="mesh-Plane_002">
+		<string name="filename" value="meshes/Plane_002.ply"/>
+		<boolean name="face_normals" value="true"/>
+		<ref id="mat-ituf_metal" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Plane_003" name="mesh-Plane_003">
+		<string name="filename" value="meshes/Plane_003.ply"/>
+		<boolean name="face_normals" value="true"/>
+		<ref id="mat-ituf_metal" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Plane_004" name="mesh-Plane_004">
+		<string name="filename" value="meshes/Plane_004.ply"/>
+		<boolean name="face_normals" value="true"/>
+		<ref id="mat-ituf_metal" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Plane_005" name="mesh-Plane_005">
+		<string name="filename" value="meshes/Plane_005.ply"/>
+		<boolean name="face_normals" value="true"/>
+		<ref id="mat-ituf_metal" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Plane_007" name="mesh-Plane_007">
+		<string name="filename" value="meshes/Plane_007.ply"/>
+		<boolean name="face_normals" value="true"/>
+		<ref id="mat-ituf_metal" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Plane_008" name="mesh-Plane_008">
+		<string name="filename" value="meshes/Plane_008.ply"/>
+		<boolean name="face_normals" value="true"/>
+		<ref id="mat-ituf_metal" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Plane_009" name="mesh-Plane_009">
+		<string name="filename" value="meshes/Plane_009.ply"/>
+		<boolean name="face_normals" value="true"/>
+		<ref id="mat-ituf_metal" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Plane_010" name="mesh-Plane_010">
+		<string name="filename" value="meshes/Plane_010.ply"/>
+		<boolean name="face_normals" value="true"/>
+		<ref id="mat-ituf_metal" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Plane_011" name="mesh-Plane_011">
+		<string name="filename" value="meshes/Plane_011.ply"/>
+		<boolean name="face_normals" value="true"/>
+		<ref id="mat-ituf_metal" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Plane_012" name="mesh-Plane_012">
+		<string name="filename" value="meshes/Plane_012.ply"/>
+		<boolean name="face_normals" value="true"/>
+		<ref id="mat-ituf_metal" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Cube_001" name="mesh-Cube_001">
+		<string name="filename" value="meshes/Cube_001.ply"/>
+		<boolean name="face_normals" value="true"/>
+		<ref id="mat-ituf_metal" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Cube_002" name="mesh-Cube_002">
+		<string name="filename" value="meshes/Cube_002.ply"/>
+		<boolean name="face_normals" value="true"/>
+		<ref id="mat-ituf_metal" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Plane_013" name="mesh-Plane_013">
+		<string name="filename" value="meshes/Plane_013.ply"/>
+		<boolean name="face_normals" value="true"/>
+		<ref id="mat-ituf_metal" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Plane_014" name="mesh-Plane_014">
+		<string name="filename" value="meshes/Plane_014.ply"/>
+		<boolean name="face_normals" value="true"/>
+		<ref id="mat-ituf_metal" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Cylinder_002" name="mesh-Cylinder_002">
+		<string name="filename" value="meshes/Cylinder_002.ply"/>
+		<boolean name="face_normals" value="true"/>
+		<ref id="mat-ituf_metal" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Cylinder_003" name="mesh-Cylinder_003">
+		<string name="filename" value="meshes/Cylinder_003.ply"/>
+		<boolean name="face_normals" value="true"/>
+		<ref id="mat-ituf_metal" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Plane_025" name="mesh-Plane_025">
+		<string name="filename" value="meshes/Plane_025.ply"/>
+		<boolean name="face_normals" value="true"/>
+		<ref id="mat-ituf_metal" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Plane" name="mesh-Plane">
+		<string name="filename" value="meshes/Plane.ply"/>
+		<boolean name="face_normals" value="true"/>
+		<ref id="mat-ituf_concrete" name="bsdf"/>
+	</shape>
+
+<!-- Volumes -->
+
+</scene>

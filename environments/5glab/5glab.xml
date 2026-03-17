@@ -1,0 +1,272 @@
+<scene version="2.1.0">
+
+<!-- Defaults, these can be set via the command line: -Darg=value -->
+
+
+<!-- Camera and Rendering Parameters -->
+
+	<integrator type="path" id="elm__0" name="elm__0">
+		<integer name="max_depth" value="12"/>
+	</integrator>
+
+<!-- Materials -->
+
+	<bsdf type="custom_concrete" id="mat-ituf_concrete" name="mat-ituf_concrete">
+		<string name="type" value="concrete"/>
+	</bsdf>
+	<bsdf type="custom_mdf" id="mat-ituf_mdf" name="mat-ituf_mdf">
+		<string name="type" value="wood"/>
+	</bsdf>
+	<bsdf type="custom_metal" id="mat-ituf_metal" name="mat-ituf_metal">
+		<string name="type" value="metal"/>
+	</bsdf>
+	<bsdf type="custom_glass" id="mat-ituf_glass" name="mat-ituf_glass">
+		<string name="type" value="glass"/>
+	</bsdf>
+	<bsdf type="custom_polystyrene" id="mat-ituf_polystyrene" name="mat-ituf_polystyrene">
+		<string name="type" value="ceiling_board"/>
+	</bsdf>
+	<bsdf type="custom_chipboard" id="mat-ituf_chipboard" name="mat-ituf_chipboard">
+		<string name="type" value="chipboard"/>
+	</bsdf>
+	<bsdf type="custom_wood" id="mat-ituf_wood" name="mat-ituf_wood">
+		<string name="type" value="wood"/>
+	</bsdf>
+
+<!-- Emitters -->
+
+
+<!-- Shapes -->
+
+	<shape type="ply" id="mesh-chair_swivel_star_back_arms0" name="mesh-chair_swivel_star_back_arms0">
+		<string name="filename" value="meshes/chair_swivel_star_back_arms0.ply"/>
+		<ref id="mat-ituf_chipboard" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-storage_cabinet_tall20" name="mesh-storage_cabinet_tall20">
+		<string name="filename" value="meshes/storage_cabinet_tall20.ply"/>
+		<ref id="mat-ituf_metal" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-storage_cabinet_tall21" name="mesh-storage_cabinet_tall21">
+		<string name="filename" value="meshes/storage_cabinet_tall21.ply"/>
+		<ref id="mat-ituf_metal" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-chair_swivel_star_back_arms1" name="mesh-chair_swivel_star_back_arms1">
+		<string name="filename" value="meshes/chair_swivel_star_back_arms1.ply"/>
+		<ref id="mat-ituf_chipboard" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-table_other_rect0" name="mesh-table_other_rect0">
+		<string name="filename" value="meshes/table_other_rect0.ply"/>
+		<ref id="mat-ituf_wood" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-storage_cabinet_tall22" name="mesh-storage_cabinet_tall22">
+		<string name="filename" value="meshes/storage_cabinet_tall22.ply"/>
+		<ref id="mat-ituf_metal" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-storage_shelf0" name="mesh-storage_shelf0">
+		<string name="filename" value="meshes/storage_shelf0.ply"/>
+		<ref id="mat-ituf_metal" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-table_other_rect1" name="mesh-table_other_rect1">
+		<string name="filename" value="meshes/table_other_rect1.ply"/>
+		<ref id="mat-ituf_wood" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-chair_swivel_star_back_arms2" name="mesh-chair_swivel_star_back_arms2">
+		<string name="filename" value="meshes/chair_swivel_star_back_arms2.ply"/>
+		<ref id="mat-ituf_chipboard" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-table_dining_rect0" name="mesh-table_dining_rect0">
+		<string name="filename" value="meshes/table_dining_rect0.ply"/>
+		<ref id="mat-ituf_wood" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-table_other_rect2" name="mesh-table_other_rect2">
+		<string name="filename" value="meshes/table_other_rect2.ply"/>
+		<ref id="mat-ituf_wood" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-chair_swivel_star_back_arms3" name="mesh-chair_swivel_star_back_arms3">
+		<string name="filename" value="meshes/chair_swivel_star_back_arms3.ply"/>
+		<ref id="mat-ituf_chipboard" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-chair_dining_four_back_arms0" name="mesh-chair_dining_four_back_arms0">
+		<string name="filename" value="meshes/chair_dining_four_back_arms0.ply"/>
+		<ref id="mat-ituf_chipboard" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-chair_other_four_back_no0" name="mesh-chair_other_four_back_no0">
+		<string name="filename" value="meshes/chair_other_four_back_no0.ply"/>
+		<ref id="mat-ituf_chipboard" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-table_other_rect3" name="mesh-table_other_rect3">
+		<string name="filename" value="meshes/table_other_rect3.ply"/>
+		<ref id="mat-ituf_wood" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-refrigerator0" name="mesh-refrigerator0">
+		<string name="filename" value="meshes/refrigerator0.ply"/>
+		<ref id="mat-ituf_metal" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-chair_swivel_star_back_arms4" name="mesh-chair_swivel_star_back_arms4">
+		<string name="filename" value="meshes/chair_swivel_star_back_arms4.ply"/>
+		<ref id="mat-ituf_chipboard" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-table_other_rect4" name="mesh-table_other_rect4">
+		<string name="filename" value="meshes/table_other_rect4.ply"/>
+		<ref id="mat-ituf_wood" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-chair_swivel_star_back_arms5" name="mesh-chair_swivel_star_back_arms5">
+		<string name="filename" value="meshes/chair_swivel_star_back_arms5.ply"/>
+		<ref id="mat-ituf_chipboard" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-chair_swivel_star_back_arms6" name="mesh-chair_swivel_star_back_arms6">
+		<string name="filename" value="meshes/chair_swivel_star_back_arms6.ply"/>
+		<ref id="mat-ituf_chipboard" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-chair_swivel_star_back_arms7" name="mesh-chair_swivel_star_back_arms7">
+		<string name="filename" value="meshes/chair_swivel_star_back_arms7.ply"/>
+		<ref id="mat-ituf_chipboard" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-washer_dryer0" name="mesh-washer_dryer0">
+		<string name="filename" value="meshes/washer_dryer0.ply"/>
+		<ref id="mat-ituf_metal" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-refrigerator1" name="mesh-refrigerator1">
+		<string name="filename" value="meshes/refrigerator1.ply"/>
+		<ref id="mat-ituf_metal" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-table_other_rect5" name="mesh-table_other_rect5">
+		<string name="filename" value="meshes/table_other_rect5.ply"/>
+		<ref id="mat-ituf_wood" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-wall_1" name="mesh-wall_1">
+		<string name="filename" value="meshes/wall_1.ply"/>
+		<ref id="mat-ituf_concrete" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-wall_4" name="mesh-wall_4">
+		<string name="filename" value="meshes/wall_4.ply"/>
+		<ref id="mat-ituf_concrete" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-wall_5" name="mesh-wall_5">
+		<string name="filename" value="meshes/wall_5.ply"/>
+		<ref id="mat-ituf_concrete" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-wall_12" name="mesh-wall_12">
+		<string name="filename" value="meshes/wall_12.ply"/>
+		<ref id="mat-ituf_concrete" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-wall_6" name="mesh-wall_6">
+		<string name="filename" value="meshes/wall_6.ply"/>
+		<ref id="mat-ituf_concrete" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-wall_7" name="mesh-wall_7">
+		<string name="filename" value="meshes/wall_7.ply"/>
+		<ref id="mat-ituf_concrete" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-wall_2" name="mesh-wall_2">
+		<string name="filename" value="meshes/wall_2.ply"/>
+		<ref id="mat-ituf_concrete" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-wall_8" name="mesh-wall_8">
+		<string name="filename" value="meshes/wall_8.ply"/>
+		<ref id="mat-ituf_concrete" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-wall_9" name="mesh-wall_9">
+		<string name="filename" value="meshes/wall_9.ply"/>
+		<ref id="mat-ituf_concrete" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-wall_3" name="mesh-wall_3">
+		<string name="filename" value="meshes/wall_3.ply"/>
+		<ref id="mat-ituf_concrete" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-wall_10" name="mesh-wall_10">
+		<string name="filename" value="meshes/wall_10.ply"/>
+		<ref id="mat-ituf_concrete" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-wall_11" name="mesh-wall_11">
+		<string name="filename" value="meshes/wall_11.ply"/>
+		<ref id="mat-ituf_concrete" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-joint_1" name="mesh-joint_1">
+		<string name="filename" value="meshes/joint_1.ply"/>
+		<ref id="mat-ituf_concrete" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-joint_4" name="mesh-joint_4">
+		<string name="filename" value="meshes/joint_4.ply"/>
+		<ref id="mat-ituf_concrete" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-joint_2" name="mesh-joint_2">
+		<string name="filename" value="meshes/joint_2.ply"/>
+		<ref id="mat-ituf_concrete" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-joint_3" name="mesh-joint_3">
+		<string name="filename" value="meshes/joint_3.ply"/>
+		<ref id="mat-ituf_concrete" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-window_1" name="mesh-window_1">
+		<string name="filename" value="meshes/window_1.ply"/>
+		<ref id="mat-ituf_glass" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-window_5" name="mesh-window_5">
+		<string name="filename" value="meshes/window_5.ply"/>
+		<ref id="mat-ituf_glass" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-window_10" name="mesh-window_10">
+		<string name="filename" value="meshes/window_10.ply"/>
+		<ref id="mat-ituf_glass" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-window_6" name="mesh-window_6">
+		<string name="filename" value="meshes/window_6.ply"/>
+		<ref id="mat-ituf_glass" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-window_2" name="mesh-window_2">
+		<string name="filename" value="meshes/window_2.ply"/>
+		<ref id="mat-ituf_glass" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-window_7" name="mesh-window_7">
+		<string name="filename" value="meshes/window_7.ply"/>
+		<ref id="mat-ituf_glass" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-window_3" name="mesh-window_3">
+		<string name="filename" value="meshes/window_3.ply"/>
+		<ref id="mat-ituf_glass" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-window_8" name="mesh-window_8">
+		<string name="filename" value="meshes/window_8.ply"/>
+		<ref id="mat-ituf_glass" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-window_4" name="mesh-window_4">
+		<string name="filename" value="meshes/window_4.ply"/>
+		<ref id="mat-ituf_glass" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-window_9" name="mesh-window_9">
+		<string name="filename" value="meshes/window_9.ply"/>
+		<ref id="mat-ituf_glass" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-floor_Other_1" name="mesh-floor_Other_1">
+		<string name="filename" value="meshes/floor_Other_1.ply"/>
+		<ref id="mat-ituf_concrete" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-floor_Other_2" name="mesh-floor_Other_2">
+		<string name="filename" value="meshes/floor_Other_2.ply"/>
+		<ref id="mat-ituf_concrete" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Cylinder" name="mesh-Cylinder">
+		<string name="filename" value="meshes/Cylinder.ply"/>
+		<boolean name="face_normals" value="true"/>
+		<ref id="mat-ituf_metal" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Cylinder_001" name="mesh-Cylinder_001">
+		<string name="filename" value="meshes/Cylinder_001.ply"/>
+		<boolean name="face_normals" value="true"/>
+		<ref id="mat-ituf_metal" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Cube_001" name="mesh-Cube_001">
+		<string name="filename" value="meshes/Cube_001.ply"/>
+		<boolean name="face_normals" value="true"/>
+		<ref id="mat-ituf_wood" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Object_3_001" name="mesh-Object_3_001">
+		<string name="filename" value="meshes/Object_3_001.ply"/>
+		<boolean name="face_normals" value="true"/>
+		<ref id="mat-ituf_concrete" name="bsdf"/>
+	</shape>
+
+<!-- Volumes -->
+
+</scene>

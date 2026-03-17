@@ -221,3 +221,6 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Currently we ignore environment meshes as these are store externally
+*.ply

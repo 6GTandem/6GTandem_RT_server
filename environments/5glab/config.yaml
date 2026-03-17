@@ -1,0 +1,55 @@
+stripe_config: 
+  N_RUs: 1 # Per stripe.
+  N_stripes: 1
+  space_between_RUs: 1 #m
+  space_between_stripes: 1 #m
+  stripe_direction: "y"
+  stripe_start_pos: [3.0076, 7.5579, 2.5] #x,y,z
+  stripe_end_pos: [3.0076, 7.5579, 2.5]
+  # Direction along which the antennas of the array are placed.
+  # Developer note: The array is placed along the y-axis by default.
+  array_direction: 'x'
+
+antenna_config: 
+  N_antennas: 1
+  tx_pattern: 'horn_antenna'
+  rx_pattern: 'open_waveguide'
+  polarization: 'V'
+
+subTHz_config:
+  fc: 140.0e+9 
+  bw: 40.0e+9 
+  num_subcarriers: 2001 #1024
+  doppler: False # todo add
+
+sub10GHz_config:
+  fc: 9.0e+9
+
+ue_locations_config:
+  zones:
+    zone1:
+      bounds: [3.01, 3.01, 7.56, 7.56, 1.131, 1.131]
+      steps: [0, 0, 0]
+      rows: 1
+      cols: 1
+
+paths:
+  basepath: "./datasets_rad_pat_debug"
+  scenepath: "./environments/5glab/5glab.xml"
+  antenna_rad_path: "./antenna_patterns"
+
+# Configuration used to render the scene for debugging. These parameters are the camera position and orientation.
+render_config:
+  position: [3, 9.65, 1.5] 
+  orientation: [1.570796, 0, 0]
+
+# A dict of objects in the scene. These are used to avoid placing UEs at these locations.
+# Each defines 4 points enclosing the entire object. (x1, x2, y1, y2)
+objects:
+  none: [0, 0, 0, 0]
+
+random_configs:
+  intermediate_renders: False # intermediatelly render the scene
+  ue_orientation: 'up' #ue array is pointed upward (not used just as FYI)
+  RU_orientation: 'down' #ru array is pointed downward (not used just as FYI)
+  batch_size: 160 #number of RUs to process in parallel (depends on RAM/GPU memory)
