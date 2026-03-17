@@ -21,6 +21,8 @@ from utils import (
     ituf_metal_callback,
     ituf_polystyrene_callback,
     ituf_mdf_callback,
+    ituf_chipboard_callback,
+    ituf_wood_callback,
     create_folder,
 )
 from ue_locations_generator import create_user_location_dataset
@@ -31,7 +33,7 @@ from sionna.rt import ITURadioMaterial
 
 logger = logging.getLogger(__name__)
 
-simulation_environment = "arena"
+simulation_environment = "5glab"
 
 # For the custom materials, use an ITU material and change its callback.
 def custom_mat(props, callback):
@@ -49,6 +51,8 @@ mi.register_bsdf("custom_polystyrene", lambda props: custom_mat(props, ituf_poly
 mi.register_bsdf("custom_concrete", lambda props: custom_mat(props, ituf_concrete_callback))
 mi.register_bsdf("custom_mdf", lambda props: custom_mat(props, ituf_mdf_callback))
 mi.register_bsdf("custom_metal", lambda props: custom_mat(props, ituf_metal_callback))
+mi.register_bsdf("custom_chipboard", lambda props: custom_mat(props, ituf_chipboard_callback))
+mi.register_bsdf("custom_wood", lambda props: custom_mat(props, ituf_wood_callback))
 
 
 def check_materials(config, scene):
@@ -59,8 +63,8 @@ def check_materials(config, scene):
     logger.info(f"Checking materials at {sub_GHz / 1e9} GHz and {sub_THz / 1e9} GHz")
     for key, value in scene.objects.items():
         logger.info(f"---------------{key=}----------------")
-        # Print name of assigned radio material for different frequenies
-        for f in [sub_GHz, sub_THz]:  # Print for differrent frequencies
+        # Print name of assigned radio material for different frequencies
+        for f in [sub_GHz, sub_THz]:  # Print for different frequencies
             scene.frequency = f
             value.radio_material.frequency_update()  # update the frequency of the objects
             logger.info(f"\nRadioMaterial: {value.radio_material.name} at {scene.frequency[0] / 1e9} GHz")
@@ -120,21 +124,29 @@ if __name__ == "__main__":
     N_antennas = config["antenna_config"]["N_antennas"]
     logger.info(f"number antennas per axis: {N_antennas}")
 
-    if antenna_conf["pattern"] == "measured":
-        pattern = "custom_measured_element"
-    elif antenna_conf["pattern"] == "tr38901":
-        pattern = "tr38901"
-    else:
-        raise ValueError(f"Invalid antenna pattern selected: {antenna_conf['pattern']}")
+    tx_pattern = rx_pattern = antenna_conf.get("pattern", None)
+    if tx_pattern is None:
+        tx_pattern = antenna_conf["tx_pattern"]
+        rx_pattern = antenna_conf["rx_pattern"]
+    
+    if tx_pattern == "measured":
+        tx_pattern = "custom_measured_element"
+    if rx_pattern == "measured":
+        rx_pattern = "custom_measured_element"
 
     scene.tx_array = PlanarArray(
         num_cols=N_antennas,
         num_rows=1,
         vertical_spacing=0.5,
         horizontal_spacing=0.5,
-        pattern=pattern,
+        pattern=tx_pattern,
         polarization=config["antenna_config"]["polarization"],
     )
+
+    fig1, fig2, fig3 =scene.tx_array.antenna_pattern.show()
+    fig1.savefig("tx-cut1.pdf")
+    fig2.savefig("tx-cut2.pdf")
+    fig3.savefig("tx-3d.pdf")
 
     # Configure antenna array for all receivers
     scene.rx_array = PlanarArray(
@@ -142,9 +154,14 @@ if __name__ == "__main__":
         num_rows=1,
         vertical_spacing=0.5,
         horizontal_spacing=0.5,
-        pattern=pattern,
+        pattern=rx_pattern,
         polarization=config["antenna_config"]["polarization"],
     )
+
+    fig1, fig2, fig3 =scene.rx_array.antenna_pattern.show()
+    fig1.savefig("rx-cut1.pdf")
+    fig2.savefig("rx-cut2.pdf")
+    fig3.savefig("rx-3d.pdf")
 
     # sub-THz stripe specs
     stripe_start_pos = config["stripe_config"]["stripe_start_pos"]
@@ -161,13 +178,15 @@ if __name__ == "__main__":
     x_pos = np.linspace(stripe_start_pos[0], stripe_end_pos[0], N_RUs).tolist()
     y_pos = np.linspace(stripe_start_pos[1], stripe_end_pos[1], N_RUs).tolist()
     z_pos = np.linspace(stripe_start_pos[2], stripe_end_pos[2], N_RUs).tolist()
-    # Perform a sanity check to see if the positions are ok.
-    x_diff = x_pos[1] - x_pos[0]
-    y_diff = y_pos[1] - y_pos[0]
-    z_diff = z_pos[1] - z_pos[0]
-    ru_dist = np.sqrt(x_diff ** 2 + y_diff ** 2 + z_diff ** 2) 
 
-    assert np.isclose(ru_dist, space_between_RUs), f"Actual space between RUs {ru_dist} does not match the one specified in the config {space_between_RUs}"
+    if N_RUs > 1 and N_stripes > 1:
+        # Perform a sanity check to see if the positions are ok.
+        x_diff = x_pos[1] - x_pos[0]
+        y_diff = y_pos[1] - y_pos[0]
+        z_diff = z_pos[1] - z_pos[0]
+        ru_dist = np.sqrt(x_diff ** 2 + y_diff ** 2 + z_diff ** 2) 
+
+        assert np.isclose(ru_dist, space_between_RUs), f"Actual space between RUs {ru_dist} does not match the one specified in the config {space_between_RUs}"
 
     # Create or load user dataset.
     ds_users, dataset_path = create_user_location_dataset(config, logger, simulation_environment, x_pos, y_pos)
@@ -285,7 +304,7 @@ if __name__ == "__main__":
 
                 # Compute channel frequency response
                 # Shape: [num_rx, num_rx_ant, num_tx, num_tx_ant, num_time_steps, num_subcarriers]
-                h_freq = paths.cfr(frequencies=frequencies, normalize_delays=True, out_type="numpy")
+                h_freq = paths.cfr(frequencies=frequencies, normalize_delays=False, out_type="numpy")
 
                 h_freq = np.squeeze(h_freq)
 
@@ -307,7 +326,7 @@ if __name__ == "__main__":
 
         # logging
         t_end_ue = time.time()
-        logger.info(f"Finished processing UE {ue_idx}/{ds_users.dims['user']} in {t_end_ue-t_start_ue:.2f} seconds")
+        logger.info(f"Finished processing UE {ue_idx}/{ds_users.sizes['user']} in {t_end_ue-t_start_ue:.2f} seconds")
 
         # save channel tensor for curren ue
         # Get user attributes

@@ -38,6 +38,20 @@ def ituf_mdf_callback(f_hz):
   conductivity = c*np.power(f_ghz, d)
   return (relative_permittivity, conductivity)
 
+def ituf_chipboard_callback(f_hz):
+  f_ghz = f_hz / 1e9
+  relative_permittivity = 2.25 #eta_r
+  c, d = 0.007, 1.1
+  conductivity = c*np.power(f_ghz, d)
+  return (relative_permittivity, conductivity)
+
+def ituf_wood_callback(f_hz):
+  f_ghz = f_hz / 1e9
+  relative_permittivity = 1.8 #eta_r
+  c, d = 0.006, 1.0
+  conductivity = c*np.power(f_ghz, d)
+  return (relative_permittivity, conductivity)
+
 def create_folder(folder_path):
     """
     Creates a folder at the specified path if it doesn't already exist.

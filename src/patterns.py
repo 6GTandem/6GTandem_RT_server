@@ -183,15 +183,51 @@ def v_tr38901_pattern(theta: mi.Float, phi: mi.Float) -> mi.Complex2f:
     c_theta = dr.sqrt(a)
  
     return mi.Complex2f(c_theta, 0)
+
+def gaussian_power_pattern(angle, hpbw_deg):
+    """
+    Gaussian power pattern P(angle) with P = 0.5 at angle = +/- HPBW/2.
+    angle_deg can be scalar or numpy array.
+    Returns linear power (0..1).
+    """
+    h = dr.deg2rad(hpbw_deg) / 2.0
+    sigma = h / dr.sqrt(2.0 * dr.log(2.0))
+
+    return dr.exp(-(angle ** 2) / (2.0 * sigma ** 2))
+
+def v_horn_antenna_pattern(theta: mi.Float, phi: mi.Float) -> mi.Complex2f:
+    """
+    Separable 2D power pattern: P(theta, phi) = P_E(theta) * P_H(phi)
+    theta: elevation-like angle (deg), phi: azimuth-like angle (deg)
+    """
+    gain = 17 # in dB
+    gain_linear = 10 ** (gain / 20.0)  # Convert gain from dB to linear scale
+    PE = gaussian_power_pattern(theta - dr.pi / 2, 25)
+    PH = gaussian_power_pattern(phi, 29)
+
+    return mi.Complex2f(gain_linear * PE * PH, 0)
+
+def v_open_waveguide_pattern(theta: mi.Float, phi: mi.Float) -> mi.Complex2f:
+    """
+    Separable 2D power pattern: P(theta, phi) = P_E(theta) * P_H(phi)
+    theta: elevation-like angle (deg), phi: azimuth-like angle (deg)
+    """
+    gain = 6  # in dB
+    gain_linear = 10 ** (gain / 20.0)  # Convert gain from dB to linear scale
+
+    PE = gaussian_power_pattern(theta - dr.pi / 2, 62)
+    PH = gaussian_power_pattern(phi, 94)
+
+    return mi.Complex2f(gain_linear * PE * PH, 0)
  
-    # Register all available antenna patterns
+# Register all available antenna patterns
 def create_factory(name: str) -> Callable[[str, str], sionna.rt.antenna_pattern.PolarizedAntennaPattern]:
     r"""Create a factory method for the instantiation of polarized antenna
     patterns
- 
+
     Note that there must be a vertical antenna pattern function with name
     "v_{s}_pattern" which is used.
- 
+
     :param name: Name under which to register the factory method
     :returns: Callable creating an instance of PolarizedAntennaPattern
     """
@@ -201,6 +237,6 @@ def create_factory(name: str) -> Callable[[str, str], sionna.rt.antenna_pattern.
                                 polarization=polarization,
                                 polarization_model=polarization_model)
     return f
- 
-for s in ["tr38901"]:
+
+for s in ["tr38901", "horn_antenna", "open_waveguide"]:
     sionna.rt.antenna_pattern.register_antenna_pattern(s, create_factory(s))
